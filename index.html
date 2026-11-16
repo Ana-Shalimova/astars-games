@@ -5,9 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Astars</title>
   <meta name="description" content="Simple kid games — maths, puzzles, and robots." />
+  <link rel="icon" href="astars-logo.png" type="image/png" />
   <style>
     :root {
       --bg: #f3efe6;
+      --header: #e4ece6;
       --card: #fffcf7;
       --ink: #3d3a34;
       --muted: #7a7468;
@@ -34,9 +36,29 @@
         radial-gradient(ellipse at top left, #efe8d8 0%, transparent 50%),
         radial-gradient(ellipse at bottom right, #dde8e2 0%, transparent 45%),
         var(--bg);
-      padding: 28px 20px 48px;
+      padding: 0 0 48px;
       position: relative;
       overflow-x: hidden;
+    }
+
+    .site-header {
+      position: relative;
+      z-index: 2;
+      background: var(--header);
+      border-bottom: 1px solid rgba(61, 58, 52, 0.08);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    .site-logo {
+      display: block;
+      height: 52px;
+      width: auto;
+      max-width: min(220px, 70vw);
+      object-fit: contain;
+      object-position: left center;
     }
 
     .brick-scape {
@@ -104,24 +126,17 @@
       z-index: 1;
       width: min(920px, 100%);
       margin: 0 auto;
+      padding: 28px 20px 0;
     }
 
     .hero {
       text-align: center;
-      padding: 36px 16px 28px;
+      padding: 20px 16px 28px;
       animation: rise 0.7s ease both;
     }
 
-    .brand {
-      margin: 0;
-      font-size: clamp(2.8rem, 10vw, 4.4rem);
-      letter-spacing: 0.04em;
-      line-height: 1;
-      color: var(--ink);
-    }
-
     .tagline {
-      margin: 14px 0 0;
+      margin: 0;
       font-size: 1.15rem;
       color: var(--muted);
       max-width: 28ch;
@@ -190,6 +205,10 @@
   </style>
 </head>
 <body>
+  <header class="site-header">
+    <img class="site-logo" src="astars-logo.png" alt="Astars" width="220" height="156" />
+  </header>
+
   <div class="brick-scape" aria-hidden="true">
     <div class="float-brick b1"></div>
     <div class="float-brick b2"></div>
@@ -198,10 +217,9 @@
   </div>
 
   <main class="shell">
-    <header class="hero">
-      <h1 class="brand">Astars</h1>
+    <div class="hero">
       <p class="tagline">Simple kid games — maths, puzzles, and robots.</p>
-    </header>
+    </div>
 
     <section class="games" aria-label="Games">
       <a class="game" href="maths-game.html">
