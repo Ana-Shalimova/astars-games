@@ -152,15 +152,28 @@
       display: flex;
       align-items: center;
       justify-content: flex-start;
+      gap: 14px;
+      flex-wrap: wrap;
     }
 
     .site-logo {
       display: block;
-      height: 52px;
+      height: 48px;
       width: auto;
-      max-width: min(220px, 70vw);
+      max-width: min(200px, 55vw);
       object-fit: contain;
       object-position: left center;
+      flex-shrink: 0;
+    }
+
+    .header-tagline {
+      margin: 0;
+      font-size: clamp(0.95rem, 2.4vw, 1.15rem);
+      font-weight: 700;
+      color: #2f2c28;
+      letter-spacing: 0.01em;
+      line-height: 1.25;
+      max-width: 28ch;
     }
 
     @keyframes rise {
@@ -173,42 +186,44 @@
       z-index: 1;
       width: min(920px, 100%);
       margin: 0 auto;
-      padding: 28px calc(var(--frame) + 20px) calc(var(--frame) + 12px);
-    }
-
-    .hero {
-      text-align: center;
-      padding: 20px 16px 28px;
-      animation: rise 0.7s ease both;
-    }
-
-    .tagline {
-      margin: 0;
-      font-size: 1.15rem;
-      color: var(--muted);
-      max-width: 28ch;
-      margin-inline: auto;
+      padding: 24px calc(var(--frame) + 20px) calc(var(--frame) + 12px);
     }
 
     .games {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
       gap: 16px;
-      margin-top: 12px;
-      animation: rise 0.8s ease 0.12s both;
+      animation: rise 0.8s ease 0.08s both;
     }
 
     .game {
-      display: block;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 14px 16px;
+      align-items: center;
       text-decoration: none;
       color: inherit;
       background: linear-gradient(180deg, #fffef9 0%, var(--card) 45%, #faf6ee 100%);
       border: 2px solid rgba(61, 58, 52, 0.08);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
-      padding: 22px 20px 20px;
+      padding: 20px 18px 18px;
       transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
     }
+
+    .game-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      display: grid;
+      place-items: center;
+      font-size: 1.7rem;
+      line-height: 1;
+      background: var(--accent-soft);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.5);
+    }
+
+    .game-body { min-width: 0; }
 
     .game:hover,
     .game:focus-visible {
@@ -227,12 +242,12 @@
       background: var(--accent-soft);
       border-radius: 999px;
       padding: 4px 10px;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     .game h2 {
       margin: 0 0 6px;
-      font-size: 1.35rem;
+      font-size: 1.28rem;
     }
 
     .game p {
@@ -261,43 +276,58 @@
 
   <header class="site-header">
     <img class="site-logo" src="astars-logo.png" alt="Astars" width="220" height="156" />
+    <p class="header-tagline">Simple kid games — maths, puzzles, and robots.</p>
   </header>
 
   <main class="shell">
-    <div class="hero">
-      <p class="tagline">Simple kid games — maths, puzzles, and robots.</p>
-    </div>
-
     <section class="games" aria-label="Games">
       <a class="game" href="maths-game.html">
-        <span class="game-kicker">Numbers</span>
-        <h2>Maths Stars</h2>
-        <p>Build sums with number bricks and earn stars.</p>
+        <span class="game-icon" aria-hidden="true">⭐</span>
+        <div class="game-body">
+          <span class="game-kicker">Numbers</span>
+          <h2>Maths Stars</h2>
+          <p>Add and subtract with numbers 1–10 — tap or type the answer.</p>
+        </div>
       </a>
       <a class="game" href="more-or-less-stars.html">
-        <span class="game-kicker">Compare</span>
-        <h2>More or Less</h2>
-        <p>Spot which side has more — or less.</p>
+        <span class="game-icon" aria-hidden="true">🔢</span>
+        <div class="game-body">
+          <span class="game-kicker">Compare</span>
+          <h2>More or Less</h2>
+          <p>Spot which side has more — or less.</p>
+        </div>
       </a>
       <a class="game" href="balance-stars.html">
-        <span class="game-kicker">Balance</span>
-        <h2>Balance Stars</h2>
-        <p>Stack the tray so both sides match.</p>
+        <span class="game-icon" aria-hidden="true">⚖️</span>
+        <div class="game-body">
+          <span class="game-kicker">Balance</span>
+          <h2>Balance Stars</h2>
+          <p>Stack the tray so both sides match.</p>
+        </div>
       </a>
       <a class="game" href="spin-a-robot.html">
-        <span class="game-kicker">Create</span>
-        <h2>Build a Robot</h2>
-        <p>Mix parts, press, and watch your robot dance.</p>
+        <span class="game-icon" aria-hidden="true">🤖</span>
+        <div class="game-body">
+          <span class="game-kicker">Create</span>
+          <h2>Build a Robot</h2>
+          <p>Mix parts, press, and watch your robot dance.</p>
+        </div>
       </a>
       <a class="game" href="photo-puzzle.html">
-        <span class="game-kicker">Puzzle</span>
-        <h2>Photo Puzzle</h2>
-        <p>Turn a photo into a sliding puzzle.</p>
+        <span class="game-icon" aria-hidden="true">🧩</span>
+        <div class="game-body">
+          <span class="game-kicker">Puzzle</span>
+          <h2>Photo Puzzle</h2>
+          <p>Turn a photo into a sliding puzzle.</p>
+        </div>
       </a>
       <a class="game" href="find-the-number.html">
-        <span class="game-kicker">Catch</span>
-        <h2>Find the Number</h2>
-        <p>Catch the right number before time runs out.</p>
+        <span class="game-icon" aria-hidden="true">🎯</span>
+        <div class="game-body">
+          <span class="game-kicker">Catch</span>
+          <h2>Find the Number</h2>
+          <p>Catch the right number before time runs out.</p>
+        </div>
       </a>
     </section>
 
