@@ -21,8 +21,11 @@
       --brick-blue: #6d8fb8;
       --brick-yellow: #d4b56a;
       --brick-green: #6a9a7c;
+      --brick-purple: #b59bc4;
+      --brick-orange: #d4a07a;
       --shadow: 0 14px 40px rgba(61, 58, 52, 0.1);
       --radius: 24px;
+      --frame: 36px;
     }
 
     * { box-sizing: border-box; }
@@ -41,12 +44,111 @@
       overflow-x: hidden;
     }
 
+    /* Full picture-frame: one tight row of bricks around the page */
+    .brick-frame {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      pointer-events: none;
+      min-height: 100%;
+    }
+
+    .frame-edge {
+      position: absolute;
+      display: flex;
+      gap: 0;
+    }
+
+    .frame-top,
+    .frame-bottom {
+      left: 0;
+      right: 0;
+      height: var(--frame);
+      flex-direction: row;
+    }
+
+    .frame-top { top: 0; }
+    .frame-bottom { bottom: 0; }
+
+    .frame-left,
+    .frame-right {
+      top: var(--frame);
+      bottom: var(--frame);
+      width: var(--frame);
+      flex-direction: column;
+    }
+
+    .frame-left { left: 0; }
+    .frame-right { right: 0; }
+
+    .brick {
+      flex: 1 1 0;
+      min-width: 0;
+      min-height: 0;
+      position: relative;
+      border-radius: 0;
+      box-shadow:
+        inset 0 2px 0 rgba(255, 255, 255, 0.28),
+        inset 0 -3px 0 rgba(0, 0, 0, 0.08);
+    }
+
+    .frame-top .brick,
+    .frame-bottom .brick {
+      height: 100%;
+    }
+
+    .frame-left .brick,
+    .frame-right .brick {
+      width: 100%;
+    }
+
+    /* Studs along the outer face */
+    .frame-top .brick::before,
+    .frame-bottom .brick::before {
+      content: "";
+      position: absolute;
+      left: 10%;
+      right: 10%;
+      height: 10px;
+      background:
+        radial-gradient(circle, currentColor 0 4px, transparent 5px) 0 50% / 33.33% 100% repeat-x;
+      opacity: 0.9;
+    }
+
+    .frame-top .brick::before { top: 4px; }
+    .frame-bottom .brick::before { bottom: 4px; }
+
+    .frame-left .brick::before,
+    .frame-right .brick::before {
+      content: "";
+      position: absolute;
+      top: 10%;
+      bottom: 10%;
+      width: 10px;
+      background:
+        radial-gradient(circle, currentColor 0 4px, transparent 5px) 50% 0 / 100% 33.33% repeat-y;
+      opacity: 0.9;
+    }
+
+    .frame-left .brick::before { left: 4px; }
+    .frame-right .brick::before { right: 4px; }
+
+    .brick.red { background: var(--brick-red); color: #d99286; }
+    .brick.blue { background: var(--brick-blue); color: #8eafd0; }
+    .brick.yellow { background: var(--brick-yellow); color: #e2c787; }
+    .brick.green { background: var(--brick-green); color: #88b498; }
+    .brick.purple { background: var(--brick-purple); color: #c9b3d4; }
+    .brick.orange { background: var(--brick-orange); color: #e0b595; }
+
     .site-header {
       position: relative;
       z-index: 2;
       background: var(--header);
       border-bottom: 1px solid rgba(61, 58, 52, 0.08);
       padding: 10px 20px;
+      padding-left: calc(var(--frame) + 16px);
+      padding-right: calc(var(--frame) + 16px);
+      padding-top: calc(var(--frame) + 8px);
       display: flex;
       align-items: center;
       justify-content: flex-start;
@@ -61,61 +163,6 @@
       object-position: left center;
     }
 
-    .brick-scape {
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      z-index: 0;
-      overflow: hidden;
-    }
-
-    .float-brick {
-      position: absolute;
-      border-radius: 10px;
-      box-shadow:
-        inset 0 2px 0 rgba(255, 255, 255, 0.28),
-        inset 0 -4px 0 rgba(0, 0, 0, 0.08),
-        0 8px 18px rgba(61, 58, 52, 0.1);
-      opacity: 0.5;
-    }
-
-    .float-brick::before {
-      content: "";
-      position: absolute;
-      left: 50%;
-      top: -10px;
-      transform: translateX(-50%);
-      width: calc(100% - 16px);
-      height: 14px;
-      background:
-        radial-gradient(circle at 20% 50%, currentColor 0 5px, transparent 6px),
-        radial-gradient(circle at 50% 50%, currentColor 0 5px, transparent 6px),
-        radial-gradient(circle at 80% 50%, currentColor 0 5px, transparent 6px);
-      opacity: 0.85;
-    }
-
-    .float-brick.b1 {
-      width: 88px; height: 36px; background: var(--brick-red); color: #d99286;
-      top: 8%; left: 4%; transform: rotate(-8deg); animation: bob 7s ease-in-out infinite;
-    }
-    .float-brick.b2 {
-      width: 110px; height: 40px; background: var(--brick-blue); color: #8eafd0;
-      top: 14%; right: 5%; transform: rotate(6deg); animation: bob 8s ease-in-out infinite 0.6s;
-    }
-    .float-brick.b3 {
-      width: 72px; height: 32px; background: var(--brick-yellow); color: #e2c787;
-      bottom: 18%; left: 7%; transform: rotate(10deg); animation: bob 6.5s ease-in-out infinite 1s;
-    }
-    .float-brick.b4 {
-      width: 96px; height: 38px; background: var(--brick-green); color: #88b498;
-      bottom: 12%; right: 8%; transform: rotate(-5deg); animation: bob 7.5s ease-in-out infinite 0.3s;
-    }
-
-    @keyframes bob {
-      0%, 100% { translate: 0 0; }
-      50% { translate: 0 -10px; }
-    }
-
     @keyframes rise {
       from { opacity: 0; transform: translateY(14px); }
       to { opacity: 1; transform: translateY(0); }
@@ -126,7 +173,7 @@
       z-index: 1;
       width: min(920px, 100%);
       margin: 0 auto;
-      padding: 28px 20px 0;
+      padding: 28px calc(var(--frame) + 20px) calc(var(--frame) + 12px);
     }
 
     .hero {
@@ -205,16 +252,16 @@
   </style>
 </head>
 <body>
+  <div class="brick-frame" aria-hidden="true">
+    <div class="frame-edge frame-top" id="frameTop"></div>
+    <div class="frame-edge frame-right" id="frameRight"></div>
+    <div class="frame-edge frame-bottom" id="frameBottom"></div>
+    <div class="frame-edge frame-left" id="frameLeft"></div>
+  </div>
+
   <header class="site-header">
     <img class="site-logo" src="astars-logo.png" alt="Astars" width="220" height="156" />
   </header>
-
-  <div class="brick-scape" aria-hidden="true">
-    <div class="float-brick b1"></div>
-    <div class="float-brick b2"></div>
-    <div class="float-brick b3"></div>
-    <div class="float-brick b4"></div>
-  </div>
 
   <main class="shell">
     <div class="hero">
@@ -256,5 +303,48 @@
 
     <p class="foot">Made for play at home.</p>
   </main>
+
+  <script>
+    (function () {
+      const COLORS = ["red", "blue", "yellow", "green", "purple", "orange"];
+      const TARGET = 72; // aim for roughly brick-sized segments
+
+      function fillEdge(el, along) {
+        if (!el) return;
+        const size = along === "x" ? el.clientWidth : el.clientHeight;
+        const count = Math.max(4, Math.round(size / TARGET));
+        const start = COLORS.indexOf(el.dataset.start) >= 0
+          ? COLORS.indexOf(el.dataset.start)
+          : 0;
+        el.replaceChildren();
+        for (let i = 0; i < count; i++) {
+          const brick = document.createElement("div");
+          brick.className = "brick " + COLORS[(start + i) % COLORS.length];
+          el.appendChild(brick);
+        }
+      }
+
+      function buildFrame() {
+        const top = document.getElementById("frameTop");
+        const right = document.getElementById("frameRight");
+        const bottom = document.getElementById("frameBottom");
+        const left = document.getElementById("frameLeft");
+
+        // Offset color starts so corners don't match awkwardly
+        top.dataset.start = "red";
+        right.dataset.start = "yellow";
+        bottom.dataset.start = "blue";
+        left.dataset.start = "green";
+
+        fillEdge(top, "x");
+        fillEdge(bottom, "x");
+        fillEdge(left, "y");
+        fillEdge(right, "y");
+      }
+
+      buildFrame();
+      window.addEventListener("resize", buildFrame);
+    })();
+  </script>
 </body>
 </html>
