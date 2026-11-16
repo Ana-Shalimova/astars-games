@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Photo Puzzle</title>
+  <style>
+    :root {
+      --bg: #f3efe6;
+      --card: #fffcf7;
+      --ink: #3d3a34;
+      --muted: #7a7468;
+      --accent: #5a7d6a;
+      --accent-soft: #d5e4db;
+      --warm-soft: #f0e6d4;
+      --wrong: #a66b5e;
+      --star: #d4a84b;
+      --brick-red: #c4786a;
+      --brick-blue: #6d8fb8;
+      --brick-yellow: #d4b56a;
+      --brick-green: #6a9a7c;
+      --brick-cream: #efe6d4;
+      --shadow: 0 14px 40px rgba(61, 58, 52, 0.1);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse at top left, #efe8d8 0%, transparent 50%),
+        radial-gradient(ellipse at bottom right, #dde8e2 0%, transparent 45%),
+        var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      overflow-x: hidden;
+    }
+
+    .playfield { position: relative; width: min(1100px, 100%); z-index: 1; }
+
+    .brick-scape {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+    }
+
+    .float-brick {
+      position: absolute; border-radius: 10px; opacity: 0.45;
+      box-shadow: inset 0 2px 0 rgba(255,255,255,0.28), inset 0 -4px 0 rgba(0,0,0,0.08), 0 8px 18px rgba(61,58,52,0.1);
+    }
+    .float-brick::before {
+      content: "";
+      position: absolute; left: 50%; top: -10px; transform: translateX(-50%);
+      width: calc(100% - 16px); height: 14px;
+      background:
+        radial-gradient(circle at 20% 50%, currentColor 0 5px, transparent 6px),
+        radial-gradient(circle at 50% 50%, currentColor 0 5px, transparent 6px),
+        radial-gradient(circle at 80% 50%, currentColor 0 5px, transparent 6px);
+      opacity: 0.85;
+    }
+    .float-brick.b1 { width: 88px; height: 36px; background: var(--brick-red); color: #d99286; top: 8%; left: 4%; transform: rotate(-8deg); animation: bob 7s ease-in-out infinite; }
+    .float-brick.b2 { width: 110px; height: 40px; background: var(--brick-blue); color: #8eafd0; top: 18%; right: 5%; transform: rotate(6deg); animation: bob 8s ease-in-out infinite 0.6s; }
+    .float-brick.b3 { width: 72px; height: 32px; background: var(--brick-yellow); color: #e2c787; bottom: 16%; left: 7%; transform: rotate(10deg); animation: bob 6.5s ease-in-out infinite 1s; }
+    .float-brick.b4 { width: 96px; height: 38px; background: var(--brick-green); color: #88b498; bottom: 10%; right: 8%; transform: rotate(-5deg); animation: bob 7.5s ease-in-out infinite 0.3s; }
+
+    @keyframes bob {
+      0%, 100% { translate: 0 0; }
+      50% { translate: 0 -10px; }
+    }
+
+    .app {
+      width: 100%;
+      min-height: min(900px, calc(100vh - 40px));
+      background: linear-gradient(180deg, #fffef9 0%, var(--card) 40%, #faf6ee 100%);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      padding: 44px 32px 28px;
+      display: grid;
+      gap: 16px;
+      align-content: start;
+      position: relative;
+      border: 4px solid #e4dccb;
+    }
+
+    .app::before {
+      content: "";
+      position: absolute; top: -18px; left: 28px; right: 28px; height: 22px;
+      background: radial-gradient(circle, var(--brick-cream) 0 9px, transparent 10px) 0 0 / 36px 22px repeat-x;
+    }
+
+    .brick-rail { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin: -6px 0 2px; }
+    .mini-brick {
+      height: 18px; border-radius: 5px; position: relative;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -2px 0 rgba(0,0,0,0.08);
+    }
+    .mini-brick::before {
+      content: "";
+      position: absolute; top: -5px; left: 50%; transform: translateX(-50%);
+      width: 8px; height: 8px; border-radius: 50%; background: inherit; filter: brightness(1.08);
+    }
+    .mini-brick.w2 { width: 34px; } .mini-brick.w3 { width: 48px; } .mini-brick.w4 { width: 62px; }
+    .mini-brick.red { background: var(--brick-red); }
+    .mini-brick.blue { background: var(--brick-blue); }
+    .mini-brick.yellow { background: var(--brick-yellow); }
+    .mini-brick.green { background: var(--brick-green); }
+    .mini-brick.purple { background: #b59bc4; }
+    .mini-brick.orange { background: #d4a07a; }
+
+    header {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      gap: 16px; flex-wrap: wrap;
+    }
+    h1 { margin: 0; font-size: clamp(1.7rem, 4vw, 2.2rem); color: var(--accent); }
+    .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 1.05rem; }
+    .header-tools { display: flex; align-items: center; gap: 12px; }
+
+    .sound-btn {
+      border: none; border-radius: 14px; width: 56px; height: 56px; font-size: 1.6rem; cursor: pointer;
+      background: linear-gradient(180deg, #efe8da, #e4dccb);
+      box-shadow: inset 0 2px 0 rgba(255,255,255,0.5), inset 0 -3px 0 rgba(0,0,0,0.08), 0 4px 0 #d0c6b4;
+    }
+    .sound-btn[aria-pressed="true"] { opacity: 0.55; }
+
+    .scoreboard {
+      background: linear-gradient(180deg, #7ea890, var(--accent));
+      color: white; border-radius: 14px; padding: 14px 18px 12px; min-width: 120px;
+      text-align: right; position: relative;
+      box-shadow: inset 0 2px 0 rgba(255,255,255,0.25), inset 0 -4px 0 rgba(0,0,0,0.1);
+    }
+    .scoreboard::before {
+      content: "";
+      position: absolute; top: -9px; right: 16px; width: 54px; height: 12px;
+      background:
+        radial-gradient(circle at 16% 50%, #8fbaa1 0 5px, transparent 6px),
+        radial-gradient(circle at 50% 50%, #8fbaa1 0 5px, transparent 6px),
+        radial-gradient(circle at 84% 50%, #8fbaa1 0 5px, transparent 6px);
+    }
+    .scoreboard .label {
+      font-size: 0.8rem; color: rgba(255,255,255,0.85);
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .scoreboard .value { font-size: 1.45rem; font-weight: bold; }
+
+    .screen { display: none; text-align: center; padding: 12px 8px 8px; }
+    .screen.active { display: block; }
+    #setupScreen.active, #startScreen.active, #winScreen.active {
+      display: grid; gap: 16px; justify-items: center;
+    }
+    #playScreen.active { display: grid; gap: 14px; text-align: left; }
+
+    .screen h2 { margin: 0 0 8px; font-size: 2.1rem; color: var(--accent); }
+    .screen p, .hint { color: var(--muted); font-size: 1.1rem; line-height: 1.45; margin: 0; }
+
+    .rule-card, .setup-card, .board-card {
+      width: min(560px, 100%);
+      background: linear-gradient(180deg, #fffefb, var(--warm-soft));
+      border-radius: 18px;
+      padding: 22px 20px;
+      border: 3px solid #e5d9c4;
+      box-shadow: inset 0 2px 0 rgba(255,255,255,0.65), 0 8px 0 #e0d3bc;
+      position: relative;
+    }
+    .board-card { width: min(640px, 100%); padding: 18px; }
+
+    .rule-card::after, .setup-card::after, .board-card::after {
+      content: "";
+      position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+      width: min(220px, 55%); height: 16px;
+      background: radial-gradient(circle, #e8dcc6 0 7px, transparent 8px) 0 0 / 32px 16px repeat-x;
+    }
+
+    .primary, .ghost-btn, .size-btn, .upload-btn {
+      border: none; cursor: pointer; font: inherit; font-weight: bold;
+      border-radius: 14px; position: relative;
+      transition: transform 0.12s ease, opacity 0.15s ease;
+    }
+
+    .primary {
+      background: linear-gradient(180deg, #6f9a82, var(--accent));
+      color: white; min-width: 150px; font-size: 1.45rem;
+      padding: 26px 22px 18px;
+      box-shadow: inset 0 2px 0 rgba(255,255,255,0.28), inset 0 -4px 0 rgba(0,0,0,0.12), 0 5px 0 #4a6b58;
+    }
+    .primary::before {
+      content: "";
+      position: absolute; top: 6px; left: 50%; transform: translateX(-50%);
+      width: 42px; height: 11px;
+      background:
+        radial-gradient(circle at 22% 50%, rgba(255,255,255,0.45) 0 4px, transparent 5px),
+        radial-gradient(circle at 50% 50%, rgba(255,255,255,0.45) 0 4px, transparent 5px),
+        radial-gradient(circle at 78% 50%, rgba(255,255,255,0.45) 0 4px, transparent 5px);
+    }
+    .primary:hover:not(:disabled) { transform: translateY(-2px); }
+    .primary:disabled { opacity: 0.45; cursor: default; }
+
+    .ghost-btn {
+      background: transparent; color: var(--muted); font-size: 1rem; padding: 10px 14px;
+    }
+
+    .actions { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 6px; }
+
+    .upload-zone {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+      border: 3px dashed #d5c7ad;
+      border-radius: 16px;
+      padding: 28px 18px;
+      background: rgba(255,255,255,0.7);
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .upload-zone:hover, .upload-zone.dragover {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+    .upload-zone:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(90, 125, 106, 0.25);
+    }
+    .upload-icon {
+      font-size: 2rem;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .upload-zone strong {
+      color: var(--accent);
+      font-size: 1.2rem;
+      display: block;
+    }
+    .upload-zone .hint {
+      margin: 0;
+      color: var(--muted);
+      font-size: 1rem;
+      font-weight: normal;
+    }
+    /* Hide native file control completely (avoids Safari/Chrome weird outlines) */
+    .upload-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+      font-size: 0;
+      border: 0;
+      padding: 0;
+      margin: 0;
+    }
+
+    .preview-wrap {
+      margin-top: 14px;
+      display: none;
+      justify-content: center;
+    }
+    .preview-wrap.show { display: flex; }
+    .preview-wrap img {
+      max-width: min(280px, 70vw);
+      max-height: 180px;
+      border-radius: 12px;
+      border: 3px solid #e5d9c4;
+      object-fit: cover;
+      box-shadow: 0 4px 0 #e0d3bc;
+    }
+
+    .size-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 16px 0 8px;
+    }
+
+    .size-btn {
+      background: linear-gradient(180deg, #fff, #f3ebe0);
+      color: var(--ink);
+      border: 3px solid #e5d9c4;
+      padding: 16px 8px 14px;
+      font-size: 1.15rem;
+      box-shadow: inset 0 2px 0 rgba(255,255,255,0.6), 0 4px 0 #e0d3bc;
+    }
+    .size-btn .pieces {
+      display: block;
+      font-size: 0.9rem;
+      color: var(--muted);
+      font-weight: normal;
+      margin-top: 4px;
+    }
+    .size-btn.selected {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .privacy {
+      font-size: 0.95rem;
+      color: var(--muted);
+      margin-top: 10px;
+    }
+
+    .meta {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 12px; flex-wrap: wrap; color: var(--muted);
+    }
+    .level-pill {
+      background: linear-gradient(180deg, #e8f0ea, var(--accent-soft));
+      color: var(--accent); padding: 8px 16px 6px; border-radius: 10px; font-weight: bold;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.5), inset 0 -2px 0 rgba(0,0,0,0.06);
+      position: relative;
+    }
+    .level-pill::before {
+      content: "";
+      position: absolute; top: -6px; left: 14px;
+      width: 8px; height: 8px; border-radius: 50%; background: #b7d0c0;
+      box-shadow: 14px 0 0 #b7d0c0;
+    }
+
+    .board-wrap {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .board {
+      display: grid;
+      gap: 3px;
+      width: min(520px, 88vw);
+      aspect-ratio: 1;
+      background: #d8cdb8;
+      padding: 3px;
+      border-radius: 12px;
+      border: 3px solid #e5d9c4;
+      box-shadow: inset 0 2px 6px rgba(61,58,52,0.12);
+      touch-action: manipulation;
+    }
+
+    .tile {
+      border: none;
+      padding: 0;
+      margin: 0;
+      cursor: pointer;
+      background-repeat: no-repeat;
+      border-radius: 4px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.25);
+      transition: outline 0.1s ease, transform 0.1s ease;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    .tile:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+    .tile.selected {
+      outline: 4px solid var(--brick-yellow);
+      outline-offset: -2px;
+      transform: scale(0.96);
+      z-index: 1;
+      position: relative;
+    }
+    .tile.correct-flash {
+      outline: 4px solid var(--accent);
+      outline-offset: -2px;
+    }
+
+    .feedback {
+      min-height: 1.4em;
+      text-align: center;
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: var(--accent);
+    }
+
+    .win-stars {
+      color: var(--star);
+      font-size: 2rem;
+      letter-spacing: 0.15em;
+      margin: 4px 0;
+    }
+
+    .thumb-done {
+      max-width: min(240px, 70vw);
+      border-radius: 14px;
+      border: 3px solid #e5d9c4;
+      box-shadow: 0 6px 0 #e0d3bc;
+    }
+
+    @media (max-width: 700px) {
+      .app { padding: 36px 16px 20px; min-height: auto; }
+      .size-row { grid-template-columns: 1fr; }
+      .float-brick { opacity: 0.25; scale: 0.85; }
+    }
+  </style>
+</head>
+<body>
+  <div class="brick-scape" aria-hidden="true">
+    <div class="float-brick b1"></div>
+    <div class="float-brick b2"></div>
+    <div class="float-brick b3"></div>
+    <div class="float-brick b4"></div>
+  </div>
+
+  <div class="playfield">
+  <div class="app">
+    <div class="brick-rail" aria-hidden="true">
+      <span class="mini-brick w3 red"></span>
+      <span class="mini-brick w2 blue"></span>
+      <span class="mini-brick w4 yellow"></span>
+      <span class="mini-brick w2 green"></span>
+      <span class="mini-brick w3 purple"></span>
+      <span class="mini-brick w2 orange"></span>
+    </div>
+
+    <header>
+      <div>
+        <h1>Photo Puzzle</h1>
+        <p class="subtitle">Your picture · your pieces</p>
+      </div>
+      <div class="header-tools">
+        <button class="sound-btn" id="soundBtn" type="button" aria-pressed="false" aria-label="Mute sound">🔊</button>
+        <div class="scoreboard">
+          <div class="label">Moves</div>
+          <div class="value" id="movesValue">0</div>
+        </div>
+      </div>
+    </header>
+
+    <div id="startScreen" class="screen active">
+      <div class="rule-card">
+        <div style="font-size:2.4rem;margin-bottom:10px" aria-hidden="true">📷 → 🧩</div>
+        <p>
+          Add a photo, pick how many pieces,<br />
+          then tap two tiles to swap them.
+        </p>
+      </div>
+      <div class="actions">
+        <button class="primary" id="startBtn" type="button">Go!</button>
+      </div>
+    </div>
+
+    <div id="setupScreen" class="screen">
+      <div class="setup-card">
+        <div class="upload-zone" id="uploadZone">
+          <span class="upload-icon" aria-hidden="true">📷</span>
+          <strong>Tap to add a photo</strong>
+          <span class="hint">or drop an image here</span>
+          <input id="fileInput" type="file" accept="image/*" aria-label="Choose a photo" />
+        </div>
+        <div class="preview-wrap" id="previewWrap">
+          <img id="previewImg" alt="Selected photo preview" />
+        </div>
+
+        <p style="margin:18px 0 0;font-weight:bold;color:var(--accent)">How many pieces?</p>
+        <div class="size-row" role="group" aria-label="Puzzle size">
+          <button class="size-btn selected" type="button" data-size="2">2 × 2<span class="pieces">4 pieces</span></button>
+          <button class="size-btn" type="button" data-size="3">3 × 3<span class="pieces">9 pieces</span></button>
+          <button class="size-btn" type="button" data-size="4">4 × 4<span class="pieces">16 pieces</span></button>
+        </div>
+        <p class="privacy">Your photo stays on this device — nothing is uploaded.</p>
+      </div>
+      <div class="actions">
+        <button class="ghost-btn" id="backBtn" type="button">Back</button>
+        <button class="primary" id="playBtn" type="button" disabled>Play</button>
+      </div>
+    </div>
+
+    <div id="playScreen" class="screen">
+      <div class="meta">
+        <span class="level-pill" id="sizeLabel">3 × 3</span>
+        <span class="hint">Tap one tile, then another to swap</span>
+      </div>
+      <div class="board-wrap">
+        <div class="board-card">
+          <div class="board" id="board" aria-label="Puzzle board"></div>
+        </div>
+      </div>
+      <div class="feedback" id="feedback" aria-live="polite"></div>
+      <div class="actions">
+        <button class="ghost-btn" id="shuffleBtn" type="button">Shuffle again</button>
+        <button class="ghost-btn" id="newPhotoBtn" type="button">New photo</button>
+      </div>
+    </div>
+
+    <div id="winScreen" class="screen">
+      <h2>You did it!</h2>
+      <div class="win-stars" id="winStars">★★★</div>
+      <img class="thumb-done" id="winImg" alt="Completed puzzle" />
+      <p id="winMessage">Nice puzzle solving!</p>
+      <div class="actions">
+        <button class="primary" id="againBtn" type="button">Play again</button>
+        <button class="ghost-btn" id="anotherBtn" type="button">Another photo</button>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <script>
+    const state = {
+      imageUrl: null,
+      size: 2,
+      order: [],
+      selected: null,
+      moves: 0,
+      locked: false,
+      soundOn: true,
+    };
+
+    const els = {
+      startScreen: document.getElementById("startScreen"),
+      setupScreen: document.getElementById("setupScreen"),
+      playScreen: document.getElementById("playScreen"),
+      winScreen: document.getElementById("winScreen"),
+      startBtn: document.getElementById("startBtn"),
+      backBtn: document.getElementById("backBtn"),
+      playBtn: document.getElementById("playBtn"),
+      shuffleBtn: document.getElementById("shuffleBtn"),
+      newPhotoBtn: document.getElementById("newPhotoBtn"),
+      againBtn: document.getElementById("againBtn"),
+      anotherBtn: document.getElementById("anotherBtn"),
+      soundBtn: document.getElementById("soundBtn"),
+      fileInput: document.getElementById("fileInput"),
+      uploadZone: document.getElementById("uploadZone"),
+      previewWrap: document.getElementById("previewWrap"),
+      previewImg: document.getElementById("previewImg"),
+      board: document.getElementById("board"),
+      sizeLabel: document.getElementById("sizeLabel"),
+      movesValue: document.getElementById("movesValue"),
+      feedback: document.getElementById("feedback"),
+      winImg: document.getElementById("winImg"),
+      winMessage: document.getElementById("winMessage"),
+      winStars: document.getElementById("winStars"),
+    };
+
+    const audio = {
+      ctx: null,
+      master: null,
+      unlock() {
+        if (!this.ctx) {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          if (!AC) return;
+          this.ctx = new AC();
+          this.master = this.ctx.createGain();
+          this.master.gain.value = state.soundOn ? 0.55 : 0;
+          this.master.connect(this.ctx.destination);
+        }
+        if (this.ctx.state === "suspended") this.ctx.resume();
+      },
+      setMuted(muted) {
+        state.soundOn = !muted;
+        if (this.master) this.master.gain.setTargetAtTime(muted ? 0 : 0.55, this.ctx.currentTime, 0.05);
+        els.soundBtn.textContent = muted ? "🔇" : "🔊";
+        els.soundBtn.setAttribute("aria-pressed", muted ? "true" : "false");
+      },
+      tone(freq, start, dur, type, gain) {
+        if (!this.ctx || !this.master) return;
+        const osc = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        osc.type = type || "sine";
+        osc.frequency.value = freq;
+        g.gain.setValueAtTime(0.0001, start);
+        g.gain.exponentialRampToValueAtTime(gain || 0.15, start + 0.015);
+        g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+        osc.connect(g);
+        g.connect(this.master);
+        osc.start(start);
+        osc.stop(start + dur + 0.02);
+      },
+      click() {
+        if (!state.soundOn) return;
+        this.unlock();
+        this.tone(520, this.ctx.currentTime, 0.05, "triangle", 0.12);
+      },
+      swap() {
+        if (!state.soundOn) return;
+        this.unlock();
+        const t = this.ctx.currentTime;
+        this.tone(400, t, 0.06, "triangle", 0.12);
+        this.tone(560, t + 0.05, 0.08, "triangle", 0.12);
+      },
+      win() {
+        if (!state.soundOn) return;
+        this.unlock();
+        const t = this.ctx.currentTime;
+        [523, 659, 784, 1046].forEach((f, i) => this.tone(f, t + i * 0.12, 0.18, "triangle", 0.22));
+      },
+    };
+
+    function showScreen(name) {
+      els.startScreen.classList.toggle("active", name === "start");
+      els.setupScreen.classList.toggle("active", name === "setup");
+      els.playScreen.classList.toggle("active", name === "play");
+      els.winScreen.classList.toggle("active", name === "win");
+    }
+
+    function setSize(n) {
+      state.size = n;
+      document.querySelectorAll(".size-btn").forEach((btn) => {
+        btn.classList.toggle("selected", Number(btn.dataset.size) === n);
+      });
+    }
+
+    function loadImageFile(file) {
+      if (!file || !file.type.startsWith("image/")) return;
+      if (state.imageUrl) URL.revokeObjectURL(state.imageUrl);
+      state.imageUrl = URL.createObjectURL(file);
+      els.previewImg.src = state.imageUrl;
+      els.previewWrap.classList.add("show");
+      els.playBtn.disabled = false;
+      audio.unlock();
+      audio.click();
+    }
+
+    function shuffle(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function isSolved(order) {
+      return order.every((v, i) => v === i);
+    }
+
+    /** Keep shuffling until not already solved (and not identical for tiny boards). */
+    function makeShuffled(n) {
+      const base = [...Array(n * n).keys()];
+      let next = shuffle(base);
+      let guard = 0;
+      while (isSolved(next) && guard < 30) {
+        next = shuffle(base);
+        guard += 1;
+      }
+      return next;
+    }
+
+    function tileStyle(correctIndex) {
+      const s = state.size;
+      const row = Math.floor(correctIndex / s);
+      const col = correctIndex % s;
+      const sizePct = s * 100;
+      const x = s === 1 ? 0 : (col / (s - 1)) * 100;
+      const y = s === 1 ? 0 : (row / (s - 1)) * 100;
+      return {
+        backgroundImage: `url("${state.imageUrl}")`,
+        backgroundSize: `${sizePct}% ${sizePct}%`,
+        backgroundPosition: `${x}% ${y}%`,
+      };
+    }
+
+    function renderBoard() {
+      const s = state.size;
+      els.board.style.gridTemplateColumns = `repeat(${s}, 1fr)`;
+      els.board.style.gridTemplateRows = `repeat(${s}, 1fr)`;
+      els.board.innerHTML = "";
+      els.sizeLabel.textContent = `${s} × ${s}`;
+      els.movesValue.textContent = String(state.moves);
+
+      state.order.forEach((correctIndex, boardIndex) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "tile";
+        btn.dataset.boardIndex = String(boardIndex);
+        Object.assign(btn.style, tileStyle(correctIndex));
+        btn.setAttribute(
+          "aria-label",
+          `Piece ${correctIndex + 1} in slot ${boardIndex + 1}`
+        );
+        if (state.selected === boardIndex) btn.classList.add("selected");
+        btn.addEventListener("click", () => onTileTap(boardIndex));
+        els.board.appendChild(btn);
+      });
+    }
+
+    function onTileTap(boardIndex) {
+      if (state.locked) return;
+      audio.unlock();
+
+      if (state.selected === null) {
+        state.selected = boardIndex;
+        audio.click();
+        renderBoard();
+        els.feedback.textContent = "Now tap another piece to swap.";
+        return;
+      }
+
+      if (state.selected === boardIndex) {
+        state.selected = null;
+        audio.click();
+        renderBoard();
+        els.feedback.textContent = "";
+        return;
+      }
+
+      const a = state.selected;
+      const b = boardIndex;
+      [state.order[a], state.order[b]] = [state.order[b], state.order[a]];
+      state.selected = null;
+      state.moves += 1;
+      audio.swap();
+      els.feedback.textContent = "";
+      renderBoard();
+
+      if (isSolved(state.order)) {
+        state.locked = true;
+        [...els.board.children].forEach((el) => el.classList.add("correct-flash"));
+        window.setTimeout(showWin, 450);
+      }
+    }
+
+    function startPlay() {
+      if (!state.imageUrl) return;
+      audio.unlock();
+      state.order = makeShuffled(state.size);
+      state.selected = null;
+      state.moves = 0;
+      state.locked = false;
+      els.feedback.textContent = "";
+      showScreen("play");
+      renderBoard();
+    }
+
+    function showWin() {
+      audio.win();
+      els.winImg.src = state.imageUrl;
+      const n = state.size * state.size;
+      const efficient = state.moves <= n;
+      els.winStars.textContent = efficient ? "★★★★★" : state.moves <= n * 2 ? "★★★★" : "★★★";
+      els.winMessage.textContent = efficient
+        ? `Amazing — only ${state.moves} moves!`
+        : `You finished in ${state.moves} moves. Want another go?`;
+      showScreen("win");
+    }
+
+    // —— events ——
+    els.startBtn.addEventListener("click", () => {
+      audio.unlock();
+      showScreen("setup");
+    });
+
+    els.backBtn.addEventListener("click", () => showScreen("start"));
+
+    els.playBtn.addEventListener("click", startPlay);
+
+    els.shuffleBtn.addEventListener("click", () => {
+      if (!state.imageUrl) return;
+      state.order = makeShuffled(state.size);
+      state.selected = null;
+      state.moves = 0;
+      state.locked = false;
+      els.feedback.textContent = "Shuffled!";
+      audio.click();
+      renderBoard();
+    });
+
+    els.newPhotoBtn.addEventListener("click", () => {
+      state.selected = null;
+      state.locked = false;
+      showScreen("setup");
+    });
+
+    els.againBtn.addEventListener("click", startPlay);
+    els.anotherBtn.addEventListener("click", () => showScreen("setup"));
+
+    document.querySelectorAll(".size-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        setSize(Number(btn.dataset.size));
+        audio.unlock();
+        audio.click();
+      });
+    });
+
+    els.fileInput.addEventListener("change", () => {
+      const file = els.fileInput.files && els.fileInput.files[0];
+      loadImageFile(file);
+    });
+
+    ["dragenter", "dragover"].forEach((ev) => {
+      els.uploadZone.addEventListener(ev, (e) => {
+        e.preventDefault();
+        els.uploadZone.classList.add("dragover");
+      });
+    });
+    ["dragleave", "drop"].forEach((ev) => {
+      els.uploadZone.addEventListener(ev, (e) => {
+        e.preventDefault();
+        els.uploadZone.classList.remove("dragover");
+      });
+    });
+    els.uploadZone.addEventListener("drop", (e) => {
+      const file = e.dataTransfer.files && e.dataTransfer.files[0];
+      loadImageFile(file);
+    });
+
+    els.soundBtn.addEventListener("click", () => {
+      audio.unlock();
+      audio.setMuted(state.soundOn);
+    });
+  </script>
+</body>
+</html>

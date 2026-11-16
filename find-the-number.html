@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>Find the Number</title>
+  <style>
+    :root {
+      --bg: #f3efe6;
+      --card: #fffcf7;
+      --ink: #3d3a34;
+      --muted: #7a7468;
+      --accent: #5a7d6a;
+      --accent-soft: #d5e4db;
+      --warm-soft: #f0e6d4;
+      --wrong: #a66b5e;
+      --wrong-soft: #f0ddd8;
+      --star: #d4a84b;
+      --brick-red: #c4786a;
+      --brick-blue: #6d8fb8;
+      --brick-yellow: #d4b56a;
+      --brick-green: #6a9a7c;
+      --brick-cream: #efe6d4;
+      --shadow: 0 14px 40px rgba(61, 58, 52, 0.1);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse at top left, #efe8d8 0%, transparent 50%),
+        radial-gradient(ellipse at bottom right, #dde8e2 0%, transparent 45%),
+        var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      overflow-x: hidden;
+      touch-action: manipulation;
+      user-select: none;
+    }
+
+    .playfield { position: relative; width: min(1100px, 100%); z-index: 1; }
+
+    .brick-scape {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+    }
+    .float-brick {
+      position: absolute; border-radius: 10px; opacity: 0.4;
+      box-shadow: inset 0 2px 0 rgba(255,255,255,0.28), inset 0 -4px 0 rgba(0,0,0,0.08);
+    }
+    .float-brick::before {
+      content: "";
+      position: absolute; left: 50%; top: -10px; transform: translateX(-50%);
+      width: calc(100% - 16px); height: 14px;
+      background:
+        radial-gradient(circle at 20% 50%, currentColor 0 5px, transparent 6px),
+        radial-gradient(circle at 50% 50%, currentColor 0 5px, transparent 6px),
+        radial-gradient(circle at 80% 50%, currentColor 0 5px, transparent 6px);
+    }
+    .float-brick.b1 { width: 88px; height: 36px; background: var(--brick-red); color: #d99286; top: 8%; left: 4%; transform: rotate(-8deg); animation: bob 7s ease-in-out infinite; }
+    .float-brick.b2 { width: 110px; height: 40px; background: var(--brick-blue); color: #8eafd0; top: 16%; right: 5%; transform: rotate(6deg); animation: bob 8s ease-in-out infinite 0.5s; }
+    .float-brick.b3 { width: 72px; height: 32px; background: var(--brick-yellow); color: #e2c787; bottom: 14%; left: 7%; transform: rotate(10deg); animation: bob 6.5s ease-in-out infinite 1s; }
+    .float-brick.b4 { width: 96px; height: 38px; background: var(--brick-green); color: #88b498; bottom: 10%; right: 8%; transform: rotate(-5deg); animation: bob 7.5s ease-in-out infinite 0.3s; }
+
+    @keyframes bob {
+      0%, 100% { translate: 0 0; }
+      50% { translate: 0 -10px; }
+    }
+
+    .app {
+      width: 100%;
+      min-height: min(900px, calc(100vh - 32px));
+      background: linear-gradient(180deg, #fffef9 0%, var(--card) 40%, #faf6ee 100%);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      padding: 40px 24px 20px;
+      display: grid;
+      gap: 12px;
+      align-content: start;
+      position: relative;
+      border: 4px solid #e4dccb;
+    }
+    .app::before {
+      content: "";
+      position: absolute; top: -18px; left: 28px; right: 28px; height: 22px;
+      background: radial-gradient(circle, var(--brick-cream) 0 9px, transparent 10px) 0 0 / 36px 22px repeat-x;
+    }
+
+    .brick-rail { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin: -4px 0 2px; }
+    .mini-brick {
+      height: 18px; border-radius: 5px; position: relative;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -2px 0 rgba(0,0,0,0.08);
+    }
+    .mini-brick::before {
+      content: "";
+      position: absolute; top: -5px; left: 50%; transform: translateX(-50%);
+      width: 8px; height: 8px; border-radius: 50%; background: inherit; filter: brightness(1.08);
+    }
+    .mini-brick.w2 { width: 34px; } .mini-brick.w3 { width: 48px; } .mini-brick.w4 { width: 62px; }
+    .mini-brick.red { background: var(--brick-red); }
+    .mini-brick.blue { background: var(--brick-blue); }
+    .mini-brick.yellow { background: var(--brick-yellow); }
+    .mini-brick.green { background: var(--brick-green); }
+    .mini-brick.purple { background: #b59bc4; }
+    .mini-brick.orange { background: #d4a07a; }
+
+    header {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      gap: 12px; flex-wrap: wrap;
+    }
+    h1 { margin: 0; font-size: clamp(1.55rem, 4vw, 2.1rem); color: var(--accent); }
+    .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 1.02rem; }
+    .header-tools { display: flex; align-items: center; gap: 10px; }
+
+    .sound-btn {
+      border: none; border-radius: 14px; width: 52px; height: 52px; font-size: 1.5rem; cursor: pointer;
+      background: linear-gradient(180deg, #efe8da, #e4dccb);
+      box-shadow: inset 0 2px 0 rgba(255,255,255,0.5), inset 0 -3px 0 rgba(0,0,0,0.08), 0 4px 0 #d0c6b4;
+    }
+    .sound-btn[aria-pressed="true"] { opacity: 0.55; }
+
+    .scoreboard {
+      background: linear-gradient(180deg, #7ea890, var(--accent));
+      color: white; border-radius: 14px; padding: 12px 16px 10px; min-width: 110px;
+      text-align: right; position: relative;
+      box-shadow: inset 0 2px 0 rgba(255,255,255,0.25), inset 0 -4px 0 rgba(0,0,0,0.1);
+    }
+    .scoreboard::before {
+      content: "";
+      position: absolute; top: -9px; right: 14px; width: 48px; height: 12px;
+      background:
+        radial-gradient(circle at 16% 50%, #8fbaa1 0 5px, transparent 6px),
+        radial-gradient(circle at 50% 50%, #8fbaa1 0 5px, transparent 6px),
+        radial-gradient(circle at 84% 50%, #8fbaa1 0 5px, transparent 6px);
+    }
+    .scoreboard .label {
+      font-size: 0.75rem; color: rgba(255,255,255,0.85);
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .scoreboard .value { font-size: 1.6rem; font-weight: bold; }
+
+    .screen { display: none; text-align: center; padding: 10px 6px; }
+    .screen.active { display: block; }
+    #startScreen.active, #introScreen.active, #endScreen.active {
+      display: grid; gap: 16px; justify-items: center;
+    }
+    #gameScreen.active { display: grid; gap: 10px; text-align: left; }
+
+    .screen h2 { margin: 0; font-size: 2.1rem; color: var(--accent); }
+    .screen p { color: var(--muted); font-size: 1.1rem; line-height: 1.45; margin: 0; }
+
+    .rule-card {
+      width: min(520px, 100%);
+      background: linear-gradient(180deg, #fffefb, var(--warm-soft));
+      border-radius: 18px; padding: 24px 20px;
+      border: 3px solid #e5d9c4;
+      box-shadow: inset 0 2px 0 rgba(255,255,255,0.65), 0 8px 0 #e0d3bc;
+      position: relative;
+    }
+    .rule-card::after {
+      content: "";
+      position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+      width: min(220px, 55%); height: 16px;
+      background: radial-gradient(circle, #e8dcc6 0 7px, transparent 8px) 0 0 / 32px 16px repeat-x;
+    }
+
+    .intro-badge {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: linear-gradient(180deg, #e8f0ea, var(--accent-soft));
+      color: var(--accent); padding: 10px 18px 8px; border-radius: 12px;
+      font-weight: bold; font-size: 1.25rem;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.5), inset 0 -2px 0 rgba(0,0,0,0.06);
+    }
+    .intro-badge .dots { display: flex; gap: 6px; }
+    .intro-badge .dot { width: 14px; height: 14px; border-radius: 50%; background: #b7d0c0; }
+    .intro-badge .dot.on { background: var(--accent); box-shadow: 0 0 0 3px rgba(90,125,106,0.25); }
+
+    .demo-row {
+      display: flex; align-items: center; justify-content: center; gap: 14px;
+      margin: 12px 0; flex-wrap: wrap;
+    }
+    .demo-fall {
+      width: 48px; height: 48px; border-radius: 12px; font-weight: bold; font-size: 1.4rem;
+      display: grid; place-items: center;
+      background: #fff; border: 3px solid #e5d9c4; color: #4d629c;
+      animation: demo-drop 1.4s ease-in infinite;
+    }
+    .demo-catcher {
+      width: 72px; height: 64px; border-radius: 14px;
+      background: linear-gradient(180deg, #6f9a82, var(--accent));
+      color: white; font-size: 1.8rem; font-weight: bold;
+      display: grid; place-items: center;
+      box-shadow: 0 4px 0 #4a6b58;
+    }
+    @keyframes demo-drop {
+      0% { transform: translateY(-8px); opacity: 0.4; }
+      100% { transform: translateY(18px); opacity: 1; }
+    }
+
+    .primary, .move-btn {
+      border: none; cursor: pointer; font: inherit; font-weight: bold;
+      border-radius: 14px; position: relative;
+    }
+    .primary {
+      background: linear-gradient(180deg, #6f9a82, var(--accent));
+      color: white; min-width: 150px; font-size: 1.45rem;
+      padding: 26px 22px 18px;
+      box-shadow: inset 0 2px 0 rgba(255,255,255,0.28), inset 0 -4px 0 rgba(0,0,0,0.12), 0 5px 0 #4a6b58;
+    }
+    .primary::before {
+      content: "";
+      position: absolute; top: 6px; left: 50%; transform: translateX(-50%);
+      width: 42px; height: 11px;
+      background:
+        radial-gradient(circle at 22% 50%, rgba(255,255,255,0.45) 0 4px, transparent 5px),
+        radial-gradient(circle at 50% 50%, rgba(255,255,255,0.45) 0 4px, transparent 5px),
+        radial-gradient(circle at 78% 50%, rgba(255,255,255,0.45) 0 4px, transparent 5px);
+    }
+    .primary:hover { transform: translateY(-2px); }
+    .actions { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+
+    .meta {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 10px; flex-wrap: wrap; color: var(--muted);
+    }
+    .level-pill {
+      background: linear-gradient(180deg, #e8f0ea, var(--accent-soft));
+      color: var(--accent); padding: 8px 14px 6px; border-radius: 10px; font-weight: bold;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.5), inset 0 -2px 0 rgba(0,0,0,0.06);
+      position: relative;
+    }
+    .level-pill::before {
+      content: "";
+      position: absolute; top: -6px; left: 12px;
+      width: 8px; height: 8px; border-radius: 50%; background: #b7d0c0;
+      box-shadow: 14px 0 0 #b7d0c0;
+    }
+
+    .timer-track {
+      height: 16px; background: #e8e0d2; border-radius: 8px; overflow: hidden;
+      border: 2px solid #ddd3c2;
+    }
+    .timer-bar {
+      height: 100%; width: 100%;
+      background: linear-gradient(90deg, var(--brick-green), var(--brick-yellow), var(--brick-red));
+      transform-origin: left center;
+    }
+    .timer-bar.tick { transition: transform linear; }
+
+    .arena-card {
+      background: linear-gradient(180deg, #fffefb, var(--warm-soft));
+      border-radius: 18px; border: 3px solid #e5d9c4;
+      box-shadow: inset 0 2px 0 rgba(255,255,255,0.65), 0 8px 0 #e0d3bc;
+      padding: 10px; position: relative;
+    }
+    .arena-card::after {
+      content: "";
+      position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+      width: min(240px, 50%); height: 16px;
+      background: radial-gradient(circle, #e8dcc6 0 7px, transparent 8px) 0 0 / 32px 16px repeat-x;
+    }
+
+    .arena {
+      position: relative;
+      width: 100%;
+      height: min(420px, 52vh);
+      border-radius: 14px;
+      background:
+        linear-gradient(180deg, rgba(90,125,106,0.06), transparent 40%),
+        #faf6ee;
+      overflow: hidden;
+      border: 2px solid #e5d9c4;
+    }
+
+    .falling {
+      position: absolute;
+      width: 56px;
+      height: 56px;
+      margin-left: -28px;
+      border-radius: 14px;
+      font-size: 1.7rem;
+      font-weight: bold;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(180deg, #fff, #f3ebe0);
+      border: 3px solid #e5d9c4;
+      box-shadow: 0 4px 0 #e0d3bc;
+      color: #4d629c;
+      z-index: 2;
+      pointer-events: none;
+    }
+    .falling.match-hint { border-color: #8fbaa1; color: #3f7d68; }
+
+    .catcher {
+      position: absolute;
+      bottom: 12px;
+      width: 92px;
+      height: 78px;
+      margin-left: -46px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, #6f9a82, var(--accent));
+      color: white;
+      font-size: 2.4rem;
+      font-weight: bold;
+      display: grid;
+      place-items: center;
+      z-index: 4;
+      box-shadow:
+        inset 0 2px 0 rgba(255,255,255,0.28),
+        inset 0 -5px 0 rgba(0,0,0,0.12),
+        0 6px 14px rgba(61,58,52,0.2);
+      transition: left 0.05s linear;
+    }
+    .catcher::before {
+      content: "";
+      position: absolute; top: 7px; left: 50%; transform: translateX(-50%);
+      width: 42px; height: 11px;
+      background:
+        radial-gradient(circle at 22% 50%, rgba(255,255,255,0.45) 0 4px, transparent 5px),
+        radial-gradient(circle at 50% 50%, rgba(255,255,255,0.45) 0 4px, transparent 5px),
+        radial-gradient(circle at 78% 50%, rgba(255,255,255,0.45) 0 4px, transparent 5px);
+    }
+    .catcher.glow-good {
+      box-shadow: 0 0 0 5px rgba(90,125,106,0.35), 0 6px 14px rgba(61,58,52,0.2);
+    }
+    .catcher.glow-bad {
+      background: linear-gradient(180deg, #d49286, var(--wrong));
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 4px;
+    }
+    .move-btn {
+      min-height: 72px;
+      font-size: 2rem;
+      color: var(--ink);
+      background: linear-gradient(180deg, #fff, #f3ebe0);
+      border: 3px solid #e5d9c4;
+      box-shadow: inset 0 2px 0 rgba(255,255,255,0.7), 0 5px 0 #e0d3bc;
+    }
+    .move-btn:active, .move-btn.held {
+      transform: translateY(3px);
+      box-shadow: inset 0 2px 0 rgba(255,255,255,0.5), 0 2px 0 #e0d3bc;
+    }
+    .hint-keys {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin: 0;
+    }
+
+    .feedback {
+      min-height: 1.35em; text-align: center;
+      font-size: 1.15rem; font-weight: bold; color: var(--accent);
+    }
+    .feedback.wrong { color: var(--wrong); }
+
+    .round-dots { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+    .round-dot { width: 12px; height: 12px; border-radius: 50%; background: #d5cbb8; }
+    .round-dot.done { background: var(--accent); }
+    .round-dot.now { background: var(--brick-yellow); box-shadow: 0 0 0 3px rgba(212,168,75,0.35); }
+
+    .final-score { font-size: 3rem; font-weight: bold; margin: 8px 0; }
+    .win-stars { color: var(--star); font-size: 2rem; letter-spacing: 0.12em; }
+
+    @media (max-width: 700px) {
+      .app { padding: 34px 12px 16px; min-height: auto; }
+      .arena { height: min(380px, 48vh); }
+      .float-brick { opacity: 0.2; scale: 0.85; }
+      .catcher { width: 84px; height: 72px; margin-left: -42px; font-size: 2.1rem; }
+      .falling { width: 50px; height: 50px; margin-left: -25px; font-size: 1.5rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .float-brick, .demo-fall { animation: none; }
+      .catcher { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="brick-scape" aria-hidden="true">
+    <div class="float-brick b1"></div>
+    <div class="float-brick b2"></div>
+    <div class="float-brick b3"></div>
+    <div class="float-brick b4"></div>
+  </div>
+
+  <div class="playfield">
+  <div class="app">
+    <div class="brick-rail" aria-hidden="true">
+      <span class="mini-brick w3 red"></span>
+      <span class="mini-brick w2 blue"></span>
+      <span class="mini-brick w4 yellow"></span>
+      <span class="mini-brick w2 green"></span>
+      <span class="mini-brick w3 purple"></span>
+      <span class="mini-brick w2 orange"></span>
+    </div>
+
+    <header>
+      <div>
+        <h1>Find the Number</h1>
+        <p class="subtitle">Move · catch the matching falling numbers</p>
+      </div>
+      <div class="header-tools">
+        <button class="sound-btn" id="soundBtn" type="button" aria-pressed="false" aria-label="Mute sound">🔊</button>
+        <div class="scoreboard">
+          <div class="label">Score</div>
+          <div class="value" id="scoreValue">0</div>
+        </div>
+      </div>
+    </header>
+
+    <div id="startScreen" class="screen active">
+      <div class="rule-card">
+        <div class="demo-row" aria-hidden="true">
+          <div class="demo-fall">7</div>
+          <div style="font-size:1.6rem">↓</div>
+          <div class="demo-catcher">7</div>
+        </div>
+        <p>
+          Move your box with ◀ ▶ (or arrow keys).<br />
+          Catch only numbers that match the box!
+        </p>
+      </div>
+      <div class="actions">
+        <button class="primary" id="startBtn" type="button">Go!</button>
+      </div>
+    </div>
+
+    <div id="introScreen" class="screen">
+      <div class="intro-badge">
+        <span class="dots" aria-hidden="true">
+          <span class="dot on" id="dot1"></span>
+          <span class="dot" id="dot2"></span>
+        </span>
+        <span id="introLevelText">Level 1</span>
+      </div>
+      <div class="rule-card">
+        <p id="introCaption">Level 1 · slower (10 seconds)</p>
+        <p style="margin-top:10px" id="introDetail">Catch as many matching numbers as you can!</p>
+      </div>
+      <div class="actions">
+        <button class="primary" id="beginBtn" type="button">Go!</button>
+      </div>
+    </div>
+
+    <div id="gameScreen" class="screen">
+      <div class="meta">
+        <span class="level-pill" id="levelLabel">Level 1 · 10s</span>
+        <div class="round-dots" id="roundDots" aria-hidden="true"></div>
+      </div>
+      <div class="timer-track" aria-hidden="true">
+        <div class="timer-bar" id="timerBar"></div>
+      </div>
+      <div class="arena-card">
+        <div class="arena" id="arena">
+          <div class="catcher" id="catcher">1</div>
+        </div>
+      </div>
+      <div class="controls">
+        <button class="move-btn" id="btnLeft" type="button" aria-label="Move left">◀</button>
+        <button class="move-btn" id="btnRight" type="button" aria-label="Move right">▶</button>
+      </div>
+      <p class="hint-keys">Tablet: tap and hold the arrows · Computer: ← → keys</p>
+      <div class="feedback" id="feedback" aria-live="polite"></div>
+    </div>
+
+    <div id="endScreen" class="screen">
+      <h2>Well done!</h2>
+      <div class="win-stars" id="endStars">★★★</div>
+      <div class="final-score"><span id="finalScore">0</span></div>
+      <p id="endMessage">Great catching!</p>
+      <div class="actions">
+        <button class="primary" id="playAgainBtn" type="button">Play again</button>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <script>
+    /*
+      Scoring:
+      - Catch matching number = +1
+      - 3 catches in a row = +1 streak bonus
+      - Catch wrong number = no points lost, short feedback
+      Lanes keep falling numbers from overlapping.
+    */
+    const ROUNDS_PER_LEVEL = 8;
+    const LANES = 5; // fixed columns — no overlap
+    const LEVELS = {
+      1: { seconds: 10, label: "Level 1 · 10s", fallMs: 3200, spawnMs: 900 },
+      2: { seconds: 5, label: "Level 2 · 5s", fallMs: 2400, spawnMs: 700 },
+    };
+
+    const state = {
+      level: 1,
+      round: 0,
+      score: 0,
+      streak: 0,
+      target: 1,
+      pendingLevel: 1,
+      soundOn: true,
+      playing: false,
+      catcherX: 50, // percent 0–100
+      keys: { left: false, right: false },
+      falling: [],
+      laneCooldown: [],
+      timerId: null,
+      spawnId: null,
+      rafId: null,
+      endsAt: 0,
+      lastTs: 0,
+    };
+
+    const els = {
+      startScreen: document.getElementById("startScreen"),
+      introScreen: document.getElementById("introScreen"),
+      gameScreen: document.getElementById("gameScreen"),
+      endScreen: document.getElementById("endScreen"),
+      startBtn: document.getElementById("startBtn"),
+      beginBtn: document.getElementById("beginBtn"),
+      playAgainBtn: document.getElementById("playAgainBtn"),
+      soundBtn: document.getElementById("soundBtn"),
+      scoreValue: document.getElementById("scoreValue"),
+      levelLabel: document.getElementById("levelLabel"),
+      roundDots: document.getElementById("roundDots"),
+      timerBar: document.getElementById("timerBar"),
+      arena: document.getElementById("arena"),
+      catcher: document.getElementById("catcher"),
+      btnLeft: document.getElementById("btnLeft"),
+      btnRight: document.getElementById("btnRight"),
+      feedback: document.getElementById("feedback"),
+      introLevelText: document.getElementById("introLevelText"),
+      introCaption: document.getElementById("introCaption"),
+      introDetail: document.getElementById("introDetail"),
+      dot1: document.getElementById("dot1"),
+      dot2: document.getElementById("dot2"),
+      finalScore: document.getElementById("finalScore"),
+      endMessage: document.getElementById("endMessage"),
+      endStars: document.getElementById("endStars"),
+    };
+
+    const audio = {
+      ctx: null, master: null,
+      unlock() {
+        if (!this.ctx) {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          if (!AC) return;
+          this.ctx = new AC();
+          this.master = this.ctx.createGain();
+          this.master.gain.value = state.soundOn ? 0.55 : 0;
+          this.master.connect(this.ctx.destination);
+        }
+        if (this.ctx.state === "suspended") this.ctx.resume();
+      },
+      setMuted(muted) {
+        state.soundOn = !muted;
+        if (this.master) this.master.gain.setTargetAtTime(muted ? 0 : 0.55, this.ctx.currentTime, 0.05);
+        els.soundBtn.textContent = muted ? "🔇" : "🔊";
+        els.soundBtn.setAttribute("aria-pressed", muted ? "true" : "false");
+      },
+      tone(freq, start, dur, type, gain) {
+        if (!this.ctx || !this.master) return;
+        const osc = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        osc.type = type || "sine";
+        osc.frequency.value = freq;
+        g.gain.setValueAtTime(0.0001, start);
+        g.gain.exponentialRampToValueAtTime(gain || 0.15, start + 0.015);
+        g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+        osc.connect(g); g.connect(this.master);
+        osc.start(start); osc.stop(start + dur + 0.02);
+      },
+      correct() {
+        if (!state.soundOn) return;
+        this.unlock();
+        const t = this.ctx.currentTime;
+        this.tone(587, t, 0.1, "triangle", 0.22);
+        this.tone(784, t + 0.08, 0.14, "triangle", 0.2);
+      },
+      bonus() {
+        if (!state.soundOn) return;
+        this.unlock();
+        const t = this.ctx.currentTime;
+        [659, 784, 988].forEach((f, i) => this.tone(f, t + i * 0.07, 0.12, "triangle", 0.2));
+      },
+      wrong() {
+        if (!state.soundOn) return;
+        this.unlock();
+        this.tone(220, this.ctx.currentTime, 0.14, "square", 0.08);
+      },
+      tick() {
+        if (!state.soundOn) return;
+        this.unlock();
+        this.tone(440, this.ctx.currentTime, 0.04, "sine", 0.06);
+      },
+      done() {
+        if (!state.soundOn) return;
+        this.unlock();
+        const t = this.ctx.currentTime;
+        [523, 659, 784, 1046].forEach((f, i) => this.tone(f, t + i * 0.11, 0.16, "triangle", 0.2));
+      },
+    };
+
+    function randInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function showScreen(name) {
+      els.startScreen.classList.toggle("active", name === "start");
+      els.introScreen.classList.toggle("active", name === "intro");
+      els.gameScreen.classList.toggle("active", name === "game");
+      els.endScreen.classList.toggle("active", name === "end");
+    }
+
+    function updateScore() {
+      els.scoreValue.textContent = String(state.score);
+    }
+
+    function renderRoundDots() {
+      els.roundDots.innerHTML = "";
+      for (let i = 0; i < ROUNDS_PER_LEVEL; i++) {
+        const d = document.createElement("span");
+        d.className = "round-dot";
+        if (i < state.round) d.classList.add("done");
+        if (i === state.round) d.classList.add("now");
+        els.roundDots.appendChild(d);
+      }
+    }
+
+    function laneCenterPct(lane) {
+      // evenly spaced, inset from edges
+      return ((lane + 0.5) / LANES) * 100;
+    }
+
+    function pickTarget(avoid) {
+      let n = randInt(1, 10);
+      let g = 0;
+      while (n === avoid && g < 12) { n = randInt(1, 10); g++; }
+      return n;
+    }
+
+    function pickFallValue() {
+      // ~40% match so catching is rewarding
+      if (Math.random() < 0.4) return state.target;
+      let n = randInt(1, 10);
+      let g = 0;
+      while (n === state.target && g < 10) { n = randInt(1, 10); g++; }
+      return n;
+    }
+
+    function clearFalling() {
+      state.falling.forEach((f) => f.el.remove());
+      state.falling = [];
+      state.laneCooldown = Array(LANES).fill(0);
+    }
+
+    function stopLoops() {
+      if (state.timerId) { clearInterval(state.timerId); state.timerId = null; }
+      if (state.spawnId) { clearInterval(state.spawnId); state.spawnId = null; }
+      if (state.rafId) { cancelAnimationFrame(state.rafId); state.rafId = null; }
+    }
+
+    function setCatcherX(pct) {
+      const min = 10;
+      const max = 90;
+      state.catcherX = Math.max(min, Math.min(max, pct));
+      els.catcher.style.left = `${state.catcherX}%`;
+    }
+
+    function setTarget(n) {
+      state.target = n;
+      els.catcher.textContent = String(n);
+    }
+
+    function spawnFalling() {
+      if (!state.playing) return;
+      const now = performance.now();
+      // Prefer free lanes (cooldown finished)
+      const free = [];
+      for (let i = 0; i < LANES; i++) {
+        if (state.laneCooldown[i] <= now) free.push(i);
+      }
+      if (!free.length) return;
+
+      const lane = free[randInt(0, free.length - 1)];
+      const value = pickFallValue();
+      const el = document.createElement("div");
+      el.className = "falling" + (value === state.target ? " match-hint" : "");
+      el.textContent = String(value);
+      el.style.left = `${laneCenterPct(lane)}%`;
+      el.style.top = "-60px";
+
+      const fallMs = LEVELS[state.level].fallMs;
+      // Block this lane until this number is mostly gone
+      state.laneCooldown[lane] = now + fallMs * 0.55;
+
+      els.arena.appendChild(el);
+      state.falling.push({
+        el,
+        value,
+        lane,
+        y: -60,
+        speed: (els.arena.clientHeight + 120) / fallMs, // px per ms
+        alive: true,
+      });
+    }
+
+    function catchFlash(good) {
+      els.catcher.classList.remove("glow-good", "glow-bad");
+      els.catcher.classList.add(good ? "glow-good" : "glow-bad");
+      window.setTimeout(() => {
+        els.catcher.classList.remove("glow-good", "glow-bad");
+      }, 220);
+    }
+
+    function onCatch(value) {
+      if (value === state.target) {
+        state.score += 1;
+        state.streak += 1;
+        updateScore();
+        catchFlash(true);
+        if (state.streak % 3 === 0) {
+          state.score += 1;
+          updateScore();
+          els.feedback.textContent = "Streak bonus +1!";
+          els.feedback.classList.remove("wrong");
+          audio.bonus();
+        } else {
+          els.feedback.textContent = "Caught it!";
+          els.feedback.classList.remove("wrong");
+          audio.correct();
+        }
+      } else {
+        state.streak = 0;
+        catchFlash(false);
+        els.feedback.textContent = "Wrong number!";
+        els.feedback.classList.add("wrong");
+        audio.wrong();
+      }
+    }
+
+    function collides(f) {
+      const arenaH = els.arena.clientHeight;
+      const catcherTop = arenaH - 12 - 78;
+      const catcherBottom = arenaH - 12;
+      const catcherLeft = (state.catcherX / 100) * els.arena.clientWidth - 46;
+      const catcherRight = catcherLeft + 92;
+
+      const numTop = f.y;
+      const numBottom = f.y + 56;
+      const numLeft = (laneCenterPct(f.lane) / 100) * els.arena.clientWidth - 28;
+      const numRight = numLeft + 56;
+
+      const overlapY = numBottom > catcherTop + 8 && numTop < catcherBottom;
+      const overlapX = numRight > catcherLeft + 8 && numLeft < catcherRight - 8;
+      return overlapX && overlapY;
+    }
+
+    function gameLoop(ts) {
+      if (!state.playing) return;
+      if (!state.lastTs) state.lastTs = ts;
+      const dt = Math.min(32, ts - state.lastTs);
+      state.lastTs = ts;
+
+      // Movement
+      const speed = 0.085 * dt; // % per frame-ish
+      if (state.keys.left) setCatcherX(state.catcherX - speed);
+      if (state.keys.right) setCatcherX(state.catcherX + speed);
+
+      // Falling + collision
+      const arenaH = els.arena.clientHeight;
+      for (const f of state.falling) {
+        if (!f.alive) continue;
+        f.y += f.speed * dt;
+        f.el.style.top = `${f.y}px`;
+
+        if (collides(f)) {
+          f.alive = false;
+          f.el.remove();
+          onCatch(f.value);
+          continue;
+        }
+        if (f.y > arenaH + 20) {
+          f.alive = false;
+          f.el.remove();
+        }
+      }
+      state.falling = state.falling.filter((f) => f.alive);
+
+      state.rafId = requestAnimationFrame(gameLoop);
+    }
+
+    function startTimer() {
+      const seconds = LEVELS[state.level].seconds;
+      state.endsAt = performance.now() + seconds * 1000;
+      els.timerBar.classList.remove("tick");
+      els.timerBar.style.transitionDuration = "0s";
+      els.timerBar.style.transform = "scaleX(1)";
+      void els.timerBar.offsetWidth;
+      els.timerBar.classList.add("tick");
+      els.timerBar.style.transitionDuration = `${seconds}s`;
+      els.timerBar.style.transform = "scaleX(0)";
+
+      state.timerId = setInterval(() => {
+        const left = state.endsAt - performance.now();
+        if (left <= 800 && left > 700) audio.tick();
+        if (left <= 0) {
+          clearInterval(state.timerId);
+          state.timerId = null;
+          nextRound();
+        }
+      }, 100);
+    }
+
+    function beginRound() {
+      stopLoops();
+      clearFalling();
+      state.playing = true;
+      state.streak = 0;
+      state.lastTs = 0;
+      state.keys.left = false;
+      state.keys.right = false;
+      els.btnLeft.classList.remove("held");
+      els.btnRight.classList.remove("held");
+      els.feedback.textContent = "";
+      els.feedback.classList.remove("wrong");
+      els.levelLabel.textContent = LEVELS[state.level].label;
+      renderRoundDots();
+      setTarget(pickTarget(state.target));
+      setCatcherX(50);
+      startTimer();
+
+      const spawnMs = LEVELS[state.level].spawnMs;
+      spawnFalling();
+      state.spawnId = setInterval(spawnFalling, spawnMs);
+      state.rafId = requestAnimationFrame(gameLoop);
+    }
+
+    function nextRound() {
+      state.playing = false;
+      stopLoops();
+      clearFalling();
+      state.round += 1;
+      renderRoundDots();
+
+      if (state.round >= ROUNDS_PER_LEVEL) {
+        if (state.level === 1) showLevelIntro(2);
+        else finishGame();
+        return;
+      }
+      beginRound();
+    }
+
+    function showLevelIntro(level) {
+      stopLoops();
+      clearFalling();
+      state.pendingLevel = level;
+      els.introLevelText.textContent = `Level ${level}`;
+      els.dot1.classList.toggle("on", true);
+      els.dot2.classList.toggle("on", level === 2);
+      if (level === 1) {
+        els.introCaption.textContent = "Level 1 · slower (10 seconds)";
+        els.introDetail.textContent = "Move your box and catch matching numbers!";
+      } else {
+        els.introCaption.textContent = "Level 2 · faster (5 seconds)";
+        els.introDetail.textContent = "Numbers fall quicker — keep catching!";
+      }
+      showScreen("intro");
+    }
+
+    function beginLevel() {
+      audio.unlock();
+      state.level = state.pendingLevel;
+      state.round = 0;
+      showScreen("game");
+      beginRound();
+    }
+
+    function finishGame() {
+      stopLoops();
+      clearFalling();
+      state.playing = false;
+      audio.done();
+      els.finalScore.textContent = String(state.score);
+      const s = state.score;
+      els.endStars.textContent =
+        s >= 35 ? "★★★★★" : s >= 24 ? "★★★★" : s >= 14 ? "★★★" : s >= 8 ? "★★" : "★";
+      if (s >= 35) els.endMessage.textContent = "Catching champion!";
+      else if (s >= 24) els.endMessage.textContent = "Fantastic moves — so many catches!";
+      else if (s >= 14) els.endMessage.textContent = "Great effort! Want to beat your score?";
+      else els.endMessage.textContent = "Nice start! The arrows get easier with practice.";
+      showScreen("end");
+    }
+
+    function startGame() {
+      audio.unlock();
+      state.score = 0;
+      state.streak = 0;
+      state.target = 0;
+      updateScore();
+      showLevelIntro(1);
+    }
+
+    // —— controls ——
+    function hold(dir, on) {
+      state.keys[dir] = on;
+      (dir === "left" ? els.btnLeft : els.btnRight).classList.toggle("held", on);
+    }
+
+    function bindHold(btn, dir) {
+      const start = (e) => {
+        e.preventDefault();
+        audio.unlock();
+        hold(dir, true);
+      };
+      const end = (e) => {
+        e.preventDefault();
+        hold(dir, false);
+      };
+      btn.addEventListener("pointerdown", start);
+      btn.addEventListener("pointerup", end);
+      btn.addEventListener("pointerleave", end);
+      btn.addEventListener("pointercancel", end);
+    }
+
+    bindHold(els.btnLeft, "left");
+    bindHold(els.btnRight, "right");
+
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowLeft") { e.preventDefault(); hold("left", true); }
+      if (e.key === "ArrowRight") { e.preventDefault(); hold("right", true); }
+    });
+    window.addEventListener("keyup", (e) => {
+      if (e.key === "ArrowLeft") hold("left", false);
+      if (e.key === "ArrowRight") hold("right", false);
+    });
+
+    els.startBtn.addEventListener("click", startGame);
+    els.beginBtn.addEventListener("click", beginLevel);
+    els.playAgainBtn.addEventListener("click", startGame);
+    els.soundBtn.addEventListener("click", () => {
+      audio.unlock();
+      audio.setMuted(state.soundOn);
+    });
+
+    window.addEventListener("blur", () => {
+      hold("left", false);
+      hold("right", false);
+    });
+    window.addEventListener("beforeunload", stopLoops);
+  </script>
+</body>
+</html>

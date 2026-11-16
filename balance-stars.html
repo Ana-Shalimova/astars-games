@@ -1,0 +1,1314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Balance Stars</title>
+  <style>
+    :root {
+      --bg: #f3efe6;
+      --bg-soft: #e8e2d6;
+      --card: #fffcf7;
+      --ink: #3d3a34;
+      --muted: #7a7468;
+      --accent: #5a7d6a;
+      --accent-soft: #d5e4db;
+      --warm-soft: #f0e6d4;
+      --wrong: #a66b5e;
+      --wrong-soft: #f0ddd8;
+      --star: #d4a84b;
+      --num-a: #4f8f7a;
+      --num-b: #c47b4a;
+      --brick-red: #c4786a;
+      --brick-blue: #6d8fb8;
+      --brick-yellow: #d4b56a;
+      --brick-green: #6a9a7c;
+      --brick-cream: #efe6d4;
+      --shadow: 0 14px 40px rgba(61, 58, 52, 0.1);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse at top left, #efe8d8 0%, transparent 50%),
+        radial-gradient(ellipse at bottom right, #dde8e2 0%, transparent 45%),
+        var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    .playfield {
+      position: relative;
+      width: min(1100px, 100%);
+      z-index: 1;
+    }
+
+    .brick-scape {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .float-brick {
+      position: absolute;
+      border-radius: 10px;
+      box-shadow:
+        inset 0 2px 0 rgba(255, 255, 255, 0.28),
+        inset 0 -4px 0 rgba(0, 0, 0, 0.08),
+        0 8px 18px rgba(61, 58, 52, 0.1);
+      opacity: 0.55;
+    }
+
+    .float-brick::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: -10px;
+      transform: translateX(-50%);
+      width: calc(100% - 16px);
+      height: 14px;
+      background:
+        radial-gradient(circle at 20% 50%, currentColor 0 5px, transparent 6px),
+        radial-gradient(circle at 50% 50%, currentColor 0 5px, transparent 6px),
+        radial-gradient(circle at 80% 50%, currentColor 0 5px, transparent 6px);
+      opacity: 0.85;
+    }
+
+    .float-brick.b1 {
+      width: 88px; height: 36px; background: var(--brick-red); color: #d99286;
+      top: 8%; left: 4%; transform: rotate(-8deg); animation: bob 7s ease-in-out infinite;
+    }
+    .float-brick.b2 {
+      width: 110px; height: 40px; background: var(--brick-blue); color: #8eafd0;
+      top: 18%; right: 5%; transform: rotate(6deg); animation: bob 8s ease-in-out infinite 0.6s;
+    }
+    .float-brick.b3 {
+      width: 72px; height: 32px; background: var(--brick-yellow); color: #e2c787;
+      bottom: 16%; left: 7%; transform: rotate(10deg); animation: bob 6.5s ease-in-out infinite 1s;
+    }
+    .float-brick.b4 {
+      width: 96px; height: 38px; background: var(--brick-green); color: #88b498;
+      bottom: 10%; right: 8%; transform: rotate(-5deg); animation: bob 7.5s ease-in-out infinite 0.3s;
+    }
+
+    @keyframes bob {
+      0%, 100% { translate: 0 0; }
+      50% { translate: 0 -10px; }
+    }
+
+    .app {
+      width: 100%;
+      min-height: min(860px, calc(100vh - 40px));
+      background: linear-gradient(180deg, #fffef9 0%, var(--card) 40%, #faf6ee 100%);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      padding: 44px 40px 36px;
+      display: grid;
+      gap: 20px;
+      align-content: start;
+      position: relative;
+      border: 4px solid #e4dccb;
+    }
+
+    .app::before {
+      content: "";
+      position: absolute;
+      top: -18px;
+      left: 28px;
+      right: 28px;
+      height: 22px;
+      background: radial-gradient(circle, var(--brick-cream) 0 9px, transparent 10px) 0 0 / 36px 22px repeat-x;
+      filter: drop-shadow(0 2px 0 rgba(61, 58, 52, 0.06));
+    }
+
+    .brick-rail {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin: -6px 0 2px;
+    }
+
+    .mini-brick {
+      height: 18px;
+      border-radius: 5px;
+      position: relative;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.35),
+        inset 0 -2px 0 rgba(0, 0, 0, 0.08);
+    }
+
+    .mini-brick::before {
+      content: "";
+      position: absolute;
+      top: -5px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: inherit;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+      filter: brightness(1.08);
+    }
+
+    .mini-brick.w2 { width: 34px; }
+    .mini-brick.w3 { width: 48px; }
+    .mini-brick.w4 { width: 62px; }
+    .mini-brick.red { background: var(--brick-red); }
+    .mini-brick.blue { background: var(--brick-blue); }
+    .mini-brick.yellow { background: var(--brick-yellow); }
+    .mini-brick.green { background: var(--brick-green); }
+    .mini-brick.purple { background: #b59bc4; }
+    .mini-brick.orange { background: #d4a07a; }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.7rem, 4vw, 2.2rem);
+      color: var(--accent);
+    }
+
+    .subtitle {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+
+    .header-tools {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .sound-btn {
+      border: none;
+      border-radius: 14px;
+      width: 56px;
+      height: 56px;
+      font-size: 1.6rem;
+      cursor: pointer;
+      background: linear-gradient(180deg, #efe8da, #e4dccb);
+      box-shadow:
+        inset 0 2px 0 rgba(255, 255, 255, 0.5),
+        inset 0 -3px 0 rgba(0, 0, 0, 0.08),
+        0 4px 0 #d0c6b4;
+      line-height: 1;
+    }
+
+    .sound-btn[aria-pressed="true"] { opacity: 0.55; }
+
+    .scoreboard {
+      background: linear-gradient(180deg, #7ea890, var(--accent));
+      color: white;
+      border-radius: 14px;
+      padding: 16px 20px 14px;
+      min-width: 140px;
+      text-align: right;
+      position: relative;
+      box-shadow:
+        inset 0 2px 0 rgba(255, 255, 255, 0.25),
+        inset 0 -4px 0 rgba(0, 0, 0, 0.1),
+        0 6px 14px rgba(61, 58, 52, 0.12);
+    }
+
+    .scoreboard::before {
+      content: "";
+      position: absolute;
+      top: -9px;
+      right: 18px;
+      width: 54px;
+      height: 12px;
+      background:
+        radial-gradient(circle at 16% 50%, #8fbaa1 0 5px, transparent 6px),
+        radial-gradient(circle at 50% 50%, #8fbaa1 0 5px, transparent 6px),
+        radial-gradient(circle at 84% 50%, #8fbaa1 0 5px, transparent 6px);
+    }
+
+    .scoreboard .label {
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.85);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .scoreboard .value {
+      font-size: 2rem;
+      font-weight: bold;
+    }
+
+    .progress {
+      height: 16px;
+      background: #e8e0d2;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 2px solid #ddd3c2;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background:
+        repeating-linear-gradient(
+          90deg,
+          var(--brick-green) 0 18px,
+          #7eae90 18px 20px,
+          var(--brick-yellow) 20px 38px,
+          #dec488 38px 40px,
+          var(--brick-blue) 40px 58px,
+          #89a8cc 58px 60px
+        );
+      transition: width 0.35s ease;
+    }
+
+    .screen { display: none; text-align: center; padding: 20px 8px 8px; }
+    .screen.active { display: block; }
+
+    #gameScreen.active {
+      display: grid;
+      gap: 16px;
+      text-align: left;
+    }
+
+    .screen h2 {
+      margin: 0 0 10px;
+      font-size: 2.4rem;
+      color: var(--accent);
+    }
+
+    .screen p {
+      color: var(--muted);
+      font-size: 1.2rem;
+      line-height: 1.5;
+    }
+
+    .meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 1.05rem;
+      flex-wrap: wrap;
+    }
+
+    .level-pill {
+      background: linear-gradient(180deg, #e8f0ea, var(--accent-soft));
+      color: var(--accent);
+      padding: 8px 16px 6px;
+      border-radius: 10px;
+      font-weight: bold;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+        inset 0 -2px 0 rgba(0, 0, 0, 0.06);
+      position: relative;
+    }
+
+    .level-pill::before {
+      content: "";
+      position: absolute;
+      top: -6px;
+      left: 14px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #b7d0c0;
+      box-shadow: 14px 0 0 #b7d0c0;
+    }
+
+    .play-card {
+      background: linear-gradient(180deg, #fffefb, var(--warm-soft));
+      border-radius: 18px;
+      padding: 24px 18px 20px;
+      border: 3px solid #e5d9c4;
+      box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.65), 0 8px 0 #e0d3bc;
+      position: relative;
+    }
+
+    .play-card::after {
+      content: "";
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(280px, 60%);
+      height: 16px;
+      background: radial-gradient(circle, #e8dcc6 0 7px, transparent 8px) 0 0 / 32px 16px repeat-x;
+    }
+
+    /* Scale */
+    .scale-wrap {
+      display: grid;
+      justify-items: center;
+      gap: 8px;
+      padding: 8px 0 4px;
+      min-height: 280px;
+    }
+
+    .beam-area {
+      position: relative;
+      width: min(520px, 100%);
+      height: 200px;
+      display: grid;
+      place-items: center;
+    }
+
+    .fulcrum {
+      position: absolute;
+      bottom: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0;
+      height: 0;
+      border-left: 28px solid transparent;
+      border-right: 28px solid transparent;
+      border-bottom: 56px solid #8a7a5a;
+      z-index: 1;
+      filter: drop-shadow(0 3px 0 rgba(61, 58, 52, 0.15));
+    }
+
+    .beam {
+      position: absolute;
+      bottom: 68px;
+      left: 50%;
+      width: min(460px, 92%);
+      height: 18px;
+      margin-left: calc(min(460px, 92%) / -2);
+      background: linear-gradient(180deg, #c4b49a, #a89478);
+      border-radius: 8px;
+      transform-origin: center center;
+      transition: transform 0.45s cubic-bezier(0.34, 1.3, 0.64, 1);
+      z-index: 2;
+      box-shadow: 0 4px 0 #8f7d64;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding: 0 8px;
+    }
+
+    .pan-hang {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 42%;
+      transform: translateY(10px);
+    }
+
+    .string {
+      width: 3px;
+      height: 22px;
+      background: #8a7a5a;
+      border-radius: 2px;
+    }
+
+    .pan {
+      width: 100%;
+      min-height: 110px;
+      background: linear-gradient(180deg, #ffffff, #f3ebe0);
+      border: 3px solid #e5d9c4;
+      border-radius: 14px 14px 18px 18px;
+      box-shadow:
+        inset 0 2px 0 rgba(255, 255, 255, 0.7),
+        0 5px 0 #e0d3bc;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 10px 8px;
+      position: relative;
+    }
+
+    .pan.locked {
+      border-color: var(--accent);
+      background: linear-gradient(180deg, #eef5f0, var(--accent-soft));
+    }
+
+    .pan.locked::after {
+      content: "🔒";
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      font-size: 0.85rem;
+      opacity: 0.75;
+    }
+
+    .pan-num {
+      font-size: clamp(2.2rem, 6vw, 3rem);
+      font-weight: bold;
+      line-height: 1;
+    }
+
+    .pan-num.left { color: var(--num-a); }
+    .pan-num.right { color: var(--num-b); }
+
+    .pan-stars {
+      color: var(--star);
+      font-size: clamp(0.95rem, 2.2vw, 1.25rem);
+      letter-spacing: 0.02em;
+      line-height: 1.15;
+      text-align: center;
+      min-height: 2.4em;
+      max-width: 140px;
+    }
+
+    .tray {
+      margin-top: 8px;
+      background: linear-gradient(180deg, #efe8da, #e4dccb);
+      border-radius: 14px;
+      padding: 14px 16px;
+      border: 3px solid #ddd3c2;
+      text-align: center;
+      width: min(420px, 100%);
+      box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.45);
+    }
+
+    .tray-label {
+      font-size: 0.95rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+      font-weight: bold;
+    }
+
+    .tray-stars {
+      color: var(--star);
+      font-size: 1.35rem;
+      letter-spacing: 0.04em;
+      min-height: 1.6em;
+      line-height: 1.3;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 6px;
+    }
+
+    .side-controls {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .pm-btn {
+      border: none;
+      width: 72px;
+      height: 72px;
+      border-radius: 16px;
+      font-size: 2.4rem;
+      font-weight: bold;
+      cursor: pointer;
+      color: white;
+      line-height: 1;
+      box-shadow:
+        inset 0 2px 0 rgba(255, 255, 255, 0.28),
+        inset 0 -4px 0 rgba(0, 0, 0, 0.12),
+        0 5px 0 rgba(0, 0, 0, 0.15);
+      transition: transform 0.1s ease, opacity 0.15s ease;
+    }
+
+    .pm-btn:hover:not(:disabled) { transform: translateY(-2px); }
+    .pm-btn:active:not(:disabled) { transform: translateY(2px); }
+    .pm-btn:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+
+    .pm-btn.plus {
+      background: linear-gradient(180deg, #6f9a82, var(--accent));
+      box-shadow:
+        inset 0 2px 0 rgba(255, 255, 255, 0.28),
+        inset 0 -4px 0 rgba(0, 0, 0, 0.12),
+        0 5px 0 #4a6b58;
+    }
+
+    .pm-btn.minus {
+      background: linear-gradient(180deg, #c4786a, #a66b5e);
+      box-shadow:
+        inset 0 2px 0 rgba(255, 255, 255, 0.28),
+        inset 0 -4px 0 rgba(0, 0, 0, 0.12),
+        0 5px 0 #8a554a;
+    }
+
+    .check-row {
+      display: flex;
+      justify-content: center;
+      margin-top: 8px;
+    }
+
+    .primary {
+      border: none;
+      background: linear-gradient(180deg, #6f9a82, var(--accent));
+      color: white;
+      min-width: 160px;
+      font: inherit;
+      font-size: 1.6rem;
+      font-weight: bold;
+      border-radius: 14px;
+      position: relative;
+      padding: 26px 22px 18px;
+      cursor: pointer;
+      box-shadow:
+        inset 0 2px 0 rgba(255, 255, 255, 0.28),
+        inset 0 -4px 0 rgba(0, 0, 0, 0.12),
+        0 5px 0 #4a6b58;
+    }
+
+    .primary::before {
+      content: "";
+      position: absolute;
+      top: 6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 42px;
+      height: 11px;
+      background:
+        radial-gradient(circle at 22% 50%, rgba(255, 255, 255, 0.45) 0 4px, transparent 5px),
+        radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.45) 0 4px, transparent 5px),
+        radial-gradient(circle at 78% 50%, rgba(255, 255, 255, 0.45) 0 4px, transparent 5px);
+    }
+
+    .primary:hover:not(:disabled) { transform: translateY(-2px); }
+    .primary:disabled { opacity: 0.55; cursor: default; }
+
+    .feedback {
+      min-height: 1.6em;
+      text-align: center;
+      font-size: 1.3rem;
+      color: var(--accent);
+      font-weight: bold;
+    }
+
+    .feedback.wrong { color: var(--wrong); }
+
+    .stars {
+      text-align: center;
+      letter-spacing: 0.15em;
+      font-size: 1.6rem;
+      color: var(--star);
+      min-height: 1.4em;
+    }
+
+    .final-score {
+      font-size: 3rem;
+      font-weight: bold;
+      margin: 18px 0;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 18px;
+      flex-wrap: wrap;
+    }
+
+    #introScreen.active {
+      display: grid;
+      gap: 18px;
+      justify-items: center;
+    }
+
+    .intro-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: linear-gradient(180deg, #e8f0ea, var(--accent-soft));
+      color: var(--accent);
+      padding: 10px 18px 8px;
+      border-radius: 12px;
+      font-weight: bold;
+      font-size: 1.35rem;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+        inset 0 -2px 0 rgba(0, 0, 0, 0.06);
+    }
+
+    .intro-badge .dots { display: flex; gap: 6px; }
+    .intro-badge .dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #b7d0c0;
+    }
+    .intro-badge .dot.on {
+      background: var(--accent);
+      box-shadow: 0 0 0 3px rgba(90, 125, 106, 0.25);
+    }
+
+    .demo-pan.locked-demo {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      position: relative;
+    }
+
+    .demo-pan.target-demo {
+      outline: 3px solid var(--brick-yellow);
+      animation: pulse-pick 1.2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-pick {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.04); }
+    }
+
+    .rule-card {
+      width: min(520px, 100%);
+      background: linear-gradient(180deg, #fffefb, var(--warm-soft));
+      border-radius: 18px;
+      padding: 28px 24px 32px;
+      border: 3px solid #e5d9c4;
+      box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.65), 0 8px 0 #e0d3bc;
+    }
+
+    .rule-demo {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin: 8px 0 12px;
+    }
+
+    .demo-scale {
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      font-size: 1.1rem;
+    }
+
+    .demo-pan {
+      background: #f7f0e4;
+      border: 3px solid #e5d9c4;
+      border-radius: 12px;
+      padding: 12px 16px;
+      text-align: center;
+      min-width: 88px;
+    }
+
+    .demo-pan .n { font-size: 2rem; font-weight: bold; }
+    .demo-pan.ok { outline: 3px solid var(--accent); }
+    .demo-pan .n.a { color: var(--num-a); }
+    .demo-pan .n.b { color: var(--num-b); }
+    .demo-pan .s { color: var(--star); font-size: 0.95rem; }
+
+    .demo-beam {
+      width: 24px;
+      height: 6px;
+      background: #a89478;
+      margin-bottom: 40px;
+      border-radius: 3px;
+    }
+
+    .rule-caption {
+      margin: 0;
+      font-size: 1.15rem;
+      color: var(--muted);
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px; height: 1px;
+      padding: 0; margin: -1px;
+      overflow: hidden; clip: rect(0,0,0,0); border: 0;
+    }
+
+    @media (max-width: 700px) {
+      .app { padding: 36px 16px 22px; min-height: auto; }
+      .pm-btn { width: 64px; height: 64px; font-size: 2rem; }
+      .beam-area { height: 210px; }
+      .pan { min-height: 96px; }
+      .float-brick { opacity: 0.28; scale: 0.85; }
+    }
+  </style>
+</head>
+<body>
+  <div class="brick-scape" aria-hidden="true">
+    <div class="float-brick b1"></div>
+    <div class="float-brick b2"></div>
+    <div class="float-brick b3"></div>
+    <div class="float-brick b4"></div>
+  </div>
+
+  <div class="playfield">
+  <div class="app">
+    <div class="brick-rail" aria-hidden="true">
+      <span class="mini-brick w3 red"></span>
+      <span class="mini-brick w2 blue"></span>
+      <span class="mini-brick w4 yellow"></span>
+      <span class="mini-brick w2 green"></span>
+      <span class="mini-brick w3 purple"></span>
+      <span class="mini-brick w2 orange"></span>
+    </div>
+
+    <header>
+      <div>
+        <h1>Balance Stars</h1>
+        <p class="subtitle">Make both sides the same</p>
+      </div>
+      <div class="header-tools">
+        <button class="sound-btn" id="soundBtn" type="button" aria-pressed="false" aria-label="Mute sound">🔊</button>
+        <div class="scoreboard">
+          <div class="label">Score</div>
+          <div class="value"><span id="score">0</span> / <span id="totalScore">10</span></div>
+        </div>
+      </div>
+    </header>
+
+    <div class="progress" aria-hidden="true">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <div id="startScreen" class="screen active">
+      <h2>Ready to play?</h2>
+      <p>
+        Two levels · 10 rounds<br />
+        First fill both sides · then match a ready side
+      </p>
+      <div class="actions">
+        <button class="primary" id="startBtn" type="button">Start</button>
+      </div>
+    </div>
+
+    <div id="introScreen" class="screen">
+      <div class="intro-badge">
+        <span class="dots" aria-hidden="true">
+          <span class="dot on" id="dot1"></span>
+          <span class="dot" id="dot2"></span>
+        </span>
+        <span id="introLevelText">Level 1</span>
+      </div>
+      <div class="rule-card">
+        <div class="rule-demo" id="ruleDemo"></div>
+        <p class="rule-caption" id="ruleCaption"></p>
+        <p class="sr-only" id="ruleAria"></p>
+      </div>
+      <div class="actions">
+        <button class="primary" id="beginBtn" type="button">Go!</button>
+      </div>
+    </div>
+
+    <div id="gameScreen" class="screen">
+      <div class="meta">
+        <span class="level-pill" id="levelLabel">Level 1 · Fill both</span>
+        <span id="roundLabel">Round 1 of 20</span>
+      </div>
+
+      <div class="play-card">
+        <div class="scale-wrap">
+          <div class="beam-area">
+            <div class="fulcrum" aria-hidden="true"></div>
+            <div class="beam" id="beam">
+              <div class="pan-hang">
+                <div class="string" aria-hidden="true"></div>
+                <div class="pan" id="leftPan" aria-label="Left pan">
+                  <div class="pan-num left" id="leftNum">0</div>
+                  <div class="pan-stars" id="leftStars" aria-hidden="true"></div>
+                </div>
+              </div>
+              <div class="pan-hang">
+                <div class="string" aria-hidden="true"></div>
+                <div class="pan" id="rightPan" aria-label="Right pan">
+                  <div class="pan-num right" id="rightNum">0</div>
+                  <div class="pan-stars" id="rightStars" aria-hidden="true"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tray" aria-live="polite">
+            <div class="tray-label">Stars left</div>
+            <div class="tray-stars" id="trayStars"></div>
+          </div>
+        </div>
+
+        <div class="controls">
+          <div class="side-controls">
+            <button class="pm-btn minus" id="leftMinus" type="button" aria-label="Remove one from left">−</button>
+            <button class="pm-btn plus" id="leftPlus" type="button" aria-label="Add one to left">+</button>
+          </div>
+          <div class="side-controls">
+            <button class="pm-btn minus" id="rightMinus" type="button" aria-label="Remove one from right">−</button>
+            <button class="pm-btn plus" id="rightPlus" type="button" aria-label="Add one to right">+</button>
+          </div>
+        </div>
+
+        <div class="check-row">
+          <button class="primary" id="checkBtn" type="button">✓</button>
+        </div>
+      </div>
+
+      <div class="stars" id="stars" aria-live="polite"></div>
+      <div class="feedback" id="feedback" aria-live="polite"></div>
+    </div>
+
+    <div id="endScreen" class="screen">
+      <h2>Well done!</h2>
+      <div class="brick-rail" aria-hidden="true">
+        <span class="mini-brick w2 yellow"></span>
+        <span class="mini-brick w3 red"></span>
+        <span class="mini-brick w2 blue"></span>
+        <span class="mini-brick w4 green"></span>
+      </div>
+      <div class="stars" id="endStars"></div>
+      <div class="final-score"><span id="finalScore">0</span> / 10</div>
+      <p id="endMessage">Nice balancing!</p>
+      <div class="actions">
+        <button class="primary" id="playAgainBtn" type="button">Play again</button>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <script>
+    const LEVEL1_COUNT = 5;
+    const TOTAL_ROUNDS = 10;
+    const LEVEL2_TOTAL = 10; // tray always has 10 stars in level 2
+    const LEVEL1_TOTALS = [4, 6, 8, 10];
+
+    const praiseCorrect = ["Perfect balance!", "Even!", "Yes!", "Super star!", "Well done!"];
+    const praiseWrongL1 = [
+      "Not even yet — try again!",
+      "Use all the stars, and make both sides the same!",
+      "Almost — keep pressing + and −!",
+    ];
+    const praiseWrongL2 = [
+      "Not even yet — match the ready side!",
+      "Look at the locked pan — make the other the same!",
+      "Almost — keep pressing + and −!",
+    ];
+
+    const state = {
+      round: 0,
+      score: 0,
+      rounds: [],
+      left: 0,
+      right: 0,
+      pool: 0,
+      lockedSide: null, // "left" | "right" | null
+      locked: false,
+      pendingLevel: 1,
+      soundOn: true,
+    };
+
+    const els = {
+      startScreen: document.getElementById("startScreen"),
+      introScreen: document.getElementById("introScreen"),
+      gameScreen: document.getElementById("gameScreen"),
+      endScreen: document.getElementById("endScreen"),
+      startBtn: document.getElementById("startBtn"),
+      beginBtn: document.getElementById("beginBtn"),
+      playAgainBtn: document.getElementById("playAgainBtn"),
+      soundBtn: document.getElementById("soundBtn"),
+      score: document.getElementById("score"),
+      progressBar: document.getElementById("progressBar"),
+      levelLabel: document.getElementById("levelLabel"),
+      roundLabel: document.getElementById("roundLabel"),
+      beam: document.getElementById("beam"),
+      leftPan: document.getElementById("leftPan"),
+      rightPan: document.getElementById("rightPan"),
+      leftNum: document.getElementById("leftNum"),
+      rightNum: document.getElementById("rightNum"),
+      leftStars: document.getElementById("leftStars"),
+      rightStars: document.getElementById("rightStars"),
+      trayStars: document.getElementById("trayStars"),
+      leftPlus: document.getElementById("leftPlus"),
+      leftMinus: document.getElementById("leftMinus"),
+      rightPlus: document.getElementById("rightPlus"),
+      rightMinus: document.getElementById("rightMinus"),
+      checkBtn: document.getElementById("checkBtn"),
+      feedback: document.getElementById("feedback"),
+      stars: document.getElementById("stars"),
+      endStars: document.getElementById("endStars"),
+      finalScore: document.getElementById("finalScore"),
+      endMessage: document.getElementById("endMessage"),
+      introLevelText: document.getElementById("introLevelText"),
+      ruleDemo: document.getElementById("ruleDemo"),
+      ruleCaption: document.getElementById("ruleCaption"),
+      ruleAria: document.getElementById("ruleAria"),
+      dot1: document.getElementById("dot1"),
+      dot2: document.getElementById("dot2"),
+    };
+
+    const audio = {
+      ctx: null,
+      master: null,
+      unlock() {
+        if (!this.ctx) {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          if (!AC) return;
+          this.ctx = new AC();
+          this.master = this.ctx.createGain();
+          this.master.gain.value = state.soundOn ? 0.55 : 0;
+          this.master.connect(this.ctx.destination);
+        }
+        if (this.ctx.state === "suspended") this.ctx.resume();
+      },
+      setMuted(muted) {
+        state.soundOn = !muted;
+        if (this.master) this.master.gain.setTargetAtTime(muted ? 0 : 0.55, this.ctx.currentTime, 0.05);
+        els.soundBtn.textContent = muted ? "🔇" : "🔊";
+        els.soundBtn.setAttribute("aria-pressed", muted ? "true" : "false");
+      },
+      tone(freq, start, dur, type, gain) {
+        if (!this.ctx || !this.master) return;
+        const osc = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        osc.type = type || "sine";
+        osc.frequency.value = freq;
+        g.gain.setValueAtTime(0.0001, start);
+        g.gain.exponentialRampToValueAtTime(gain || 0.2, start + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+        osc.connect(g);
+        g.connect(this.master);
+        osc.start(start);
+        osc.stop(start + dur + 0.02);
+      },
+      click() {
+        if (!state.soundOn) return;
+        this.unlock();
+        this.tone(520, this.ctx.currentTime, 0.06, "triangle", 0.12);
+      },
+      playCorrect() {
+        if (!state.soundOn) return;
+        this.unlock();
+        const t = this.ctx.currentTime;
+        this.tone(523.25, t, 0.14, "triangle", 0.28);
+        this.tone(659.25, t + 0.09, 0.16, "triangle", 0.28);
+        this.tone(783.99, t + 0.18, 0.22, "triangle", 0.26);
+        this.tone(1046.5, t + 0.28, 0.2, "sine", 0.16);
+      },
+      playWrong() {
+        if (!state.soundOn) return;
+        this.unlock();
+        const t = this.ctx.currentTime;
+        this.tone(247, t, 0.18, "square", 0.12);
+        this.tone(196, t + 0.14, 0.28, "square", 0.1);
+      },
+    };
+
+    function randInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function pick(list) {
+      return list[randInt(0, list.length - 1)];
+    }
+
+    function shuffle(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = randInt(0, i);
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function starString(n) {
+      return n > 0 ? "★".repeat(n) : "";
+    }
+
+    function showScreen(name) {
+      els.startScreen.classList.toggle("active", name === "start");
+      els.introScreen.classList.toggle("active", name === "intro");
+      els.gameScreen.classList.toggle("active", name === "game");
+      els.endScreen.classList.toggle("active", name === "end");
+    }
+
+    /** 5 rounds: all of 4/6/8/10 once, plus one extra that isn't next to the same total */
+    function pickLevel1Totals() {
+      const base = shuffle(LEVEL1_TOTALS);
+      const extraCandidates = LEVEL1_TOTALS.filter((n) => n !== base[base.length - 1]);
+      const extra = pick(extraCandidates);
+      // Place the duplicate away from its twin when possible
+      const result = [...base];
+      let insertAt = randInt(0, result.length);
+      // Avoid sitting next to the same number
+      for (let tries = 0; tries < 8; tries++) {
+        const left = insertAt > 0 ? result[insertAt - 1] : null;
+        const right = insertAt < result.length ? result[insertAt] : null;
+        if (left !== extra && right !== extra) break;
+        insertAt = randInt(0, result.length);
+      }
+      result.splice(insertAt, 0, extra);
+      return result;
+    }
+
+    function buildRounds() {
+      const level1 = pickLevel1Totals().map((total) => ({
+        mode: "fill",
+        total,
+        lockedSide: null,
+        prefill: 0,
+      }));
+
+      // Level 2: each prefill 1–5 exactly once; tray always 10
+      const sides = shuffle(["left", "right", "left", "right", "left"]);
+      const level2 = shuffle([1, 2, 3, 4, 5]).map((prefill, i) => ({
+        mode: "match",
+        tray: LEVEL2_TOTAL,
+        lockedSide: sides[i],
+        prefill,
+      }));
+
+      return [...level1, ...level2];
+    }
+
+    function currentRound() {
+      return state.rounds[state.round];
+    }
+
+    function isLevel2() {
+      return state.round >= LEVEL1_COUNT;
+    }
+
+    function updateScoreboard() {
+      els.score.textContent = String(state.score);
+      els.progressBar.style.width = `${(state.round / TOTAL_ROUNDS) * 100}%`;
+    }
+
+    function updateScaleTilt() {
+      const diff = state.left - state.right;
+      // Heavier side goes down: more on left → rotate counterclockwise (negative)
+      const angle = Math.max(-14, Math.min(14, -diff * 2.2));
+      els.beam.style.transform = `rotate(${angle}deg)`;
+    }
+
+    function sideLocked(side) {
+      return state.lockedSide === side;
+    }
+
+    function renderPans() {
+      els.leftNum.textContent = String(state.left);
+      els.rightNum.textContent = String(state.right);
+      els.leftStars.textContent = starString(state.left);
+      els.rightStars.textContent = starString(state.right);
+      els.trayStars.textContent = state.pool > 0 ? starString(state.pool) : "—";
+
+      els.leftPan.classList.toggle("locked", sideLocked("left"));
+      els.rightPan.classList.toggle("locked", sideLocked("right"));
+
+      els.leftPlus.disabled = state.locked || state.pool <= 0 || sideLocked("left");
+      els.rightPlus.disabled = state.locked || state.pool <= 0 || sideLocked("right");
+      els.leftMinus.disabled = state.locked || state.left <= 0 || sideLocked("left");
+      els.rightMinus.disabled = state.locked || state.right <= 0 || sideLocked("right");
+      els.checkBtn.disabled = state.locked;
+
+      updateScaleTilt();
+    }
+
+    function clearFeedback() {
+      els.feedback.textContent = "";
+      els.feedback.classList.remove("wrong");
+      els.stars.textContent = "";
+    }
+
+    function renderLevelIntro(level) {
+      state.pendingLevel = level;
+      els.introLevelText.textContent = `Level ${level}`;
+      els.dot1.classList.toggle("on", true);
+      els.dot2.classList.toggle("on", level === 2);
+
+      if (level === 1) {
+        els.ruleDemo.innerHTML = `
+          <div class="demo-scale" aria-hidden="true">
+            <div class="demo-pan ok">
+              <div class="n a">5</div>
+              <div class="s">★★★★★</div>
+            </div>
+            <div class="demo-beam"></div>
+            <div class="demo-pan ok">
+              <div class="n b">5</div>
+              <div class="s">★★★★★</div>
+            </div>
+          </div>
+          <div style="font-size:2rem" aria-hidden="true">⚖️ → ✓</div>
+        `;
+        els.ruleCaption.textContent = "Put the same on both sides. Use all the stars.";
+        els.ruleAria.textContent = "Level 1: fill both pans equally and use every star, then press check.";
+      } else {
+        els.ruleDemo.innerHTML = `
+          <div class="demo-scale" aria-hidden="true">
+            <div class="demo-pan locked-demo">
+              <div class="n a">3</div>
+              <div class="s">★★★</div>
+            </div>
+            <div class="demo-beam"></div>
+            <div class="demo-pan target-demo">
+              <div class="n b">?</div>
+              <div class="s">＋ ＋ ＋</div>
+            </div>
+          </div>
+          <div style="font-size:2rem" aria-hidden="true">🔒 → match → ✓</div>
+        `;
+        els.ruleCaption.textContent = "One side is ready. Use the tray of 10 to make the other side the same.";
+        els.ruleAria.textContent = "Level 2: one pan is locked. You have 10 stars in the tray. Add the matching number to the other pan, then press check.";
+      }
+
+      showScreen("intro");
+    }
+
+    function startRound() {
+      const round = currentRound();
+      state.locked = false;
+      state.lockedSide = round.lockedSide;
+
+      if (round.mode === "match") {
+        if (round.lockedSide === "left") {
+          state.left = round.prefill;
+          state.right = 0;
+        } else {
+          state.left = 0;
+          state.right = round.prefill;
+        }
+        // Tray always starts at 10 — match the locked pan using some of them
+        state.pool = round.tray;
+        els.levelLabel.textContent = "Level 2 · Match";
+      } else {
+        state.left = 0;
+        state.right = 0;
+        state.pool = round.total;
+        els.levelLabel.textContent = "Level 1 · Fill both";
+      }
+
+      els.roundLabel.textContent = `Round ${state.round + 1} of ${TOTAL_ROUNDS}`;
+      clearFeedback();
+      renderPans();
+      updateScoreboard();
+    }
+
+    function add(side) {
+      if (state.locked || state.pool <= 0 || sideLocked(side)) return;
+      if (side === "left") state.left += 1;
+      else state.right += 1;
+      state.pool -= 1;
+      audio.click();
+      clearFeedback();
+      renderPans();
+    }
+
+    function remove(side) {
+      if (state.locked || sideLocked(side)) return;
+      if (side === "left") {
+        if (state.left <= 0) return;
+        state.left -= 1;
+      } else {
+        if (state.right <= 0) return;
+        state.right -= 1;
+      }
+      state.pool += 1;
+      audio.click();
+      clearFeedback();
+      renderPans();
+    }
+
+    function isCorrect() {
+      const round = currentRound();
+      if (state.left !== state.right || state.left <= 0) return false;
+      if (round.mode === "fill") return state.pool === 0;
+      // Level 2: match the prefilled amount; leftover tray stars are OK
+      return state.left === round.prefill;
+    }
+
+    function checkBalance() {
+      if (state.locked) return;
+
+      if (isCorrect()) {
+        state.locked = true;
+        state.score += 1;
+        els.feedback.textContent = pick(praiseCorrect);
+        els.feedback.classList.remove("wrong");
+        els.stars.textContent = "★★★";
+        audio.playCorrect();
+        renderPans();
+        updateScoreboard();
+
+        window.setTimeout(() => {
+          const finishedLevel1 = state.round + 1 === LEVEL1_COUNT;
+          state.round += 1;
+
+          if (state.round >= TOTAL_ROUNDS) {
+            finishGame();
+          } else if (finishedLevel1) {
+            renderLevelIntro(2);
+          } else {
+            startRound();
+          }
+        }, 1200);
+      } else {
+        els.feedback.textContent = pick(isLevel2() ? praiseWrongL2 : praiseWrongL1);
+        els.feedback.classList.add("wrong");
+        els.stars.textContent = "";
+        audio.playWrong();
+      }
+    }
+
+    function finishGame() {
+      showScreen("end");
+      els.progressBar.style.width = "100%";
+      els.finalScore.textContent = String(state.score);
+      els.endStars.textContent = "★".repeat(
+        state.score >= 9 ? 5 : state.score >= 7 ? 4 : state.score >= 5 ? 3 : state.score >= 3 ? 2 : 1
+      );
+      if (state.score === TOTAL_ROUNDS) {
+        els.endMessage.textContent = "Perfect! Every scale was even.";
+      } else if (state.score >= 7) {
+        els.endMessage.textContent = "Fantastic balancing — want another go?";
+      } else if (state.score >= 4) {
+        els.endMessage.textContent = "Great effort today. Practice makes even!";
+      } else {
+        els.endMessage.textContent = "Nice start! Buttons get easier with practice.";
+      }
+    }
+
+    function startGame() {
+      audio.unlock();
+      state.round = 0;
+      state.score = 0;
+      state.rounds = buildRounds();
+      state.lockedSide = null;
+      renderLevelIntro(1);
+    }
+
+    function beginPlay() {
+      audio.unlock();
+      if (state.pendingLevel === 2) {
+        state.round = LEVEL1_COUNT;
+      }
+      showScreen("game");
+      startRound();
+    }
+
+    els.startBtn.addEventListener("click", startGame);
+    els.beginBtn.addEventListener("click", beginPlay);
+    els.playAgainBtn.addEventListener("click", startGame);
+    els.leftPlus.addEventListener("click", () => add("left"));
+    els.rightPlus.addEventListener("click", () => add("right"));
+    els.leftMinus.addEventListener("click", () => remove("left"));
+    els.rightMinus.addEventListener("click", () => remove("right"));
+    els.checkBtn.addEventListener("click", checkBalance);
+    els.soundBtn.addEventListener("click", () => {
+      audio.unlock();
+      audio.setMuted(state.soundOn);
+    });
+  </script>
+</body>
+</html>

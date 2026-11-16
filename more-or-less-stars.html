@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>More or Less Stars</title>
+  <style>
+    :root {
+      --bg: #f3efe6;
+      --bg-soft: #e8e2d6;
+      --card: #fffcf7;
+      --ink: #3d3a34;
+      --muted: #7a7468;
+      --accent: #5a7d6a;
+      --accent-soft: #d5e4db;
+      --warm-soft: #f0e6d4;
+      --wrong: #a66b5e;
+      --wrong-soft: #f0ddd8;
+      --star: #d4a84b;
+      --num-a: #4f8f7a;
+      --num-b: #c47b4a;
+      --brick-red: #c4786a;
+      --brick-blue: #6d8fb8;
+      --brick-yellow: #d4b56a;
+      --brick-green: #6a9a7c;
+      --brick-cream: #efe6d4;
+      --shadow: 0 14px 40px rgba(61, 58, 52, 0.1);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse at top left, #efe8d8 0%, transparent 50%),
+        radial-gradient(ellipse at bottom right, #dde8e2 0%, transparent 45%),
+        var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    .playfield {
+      position: relative;
+      width: min(1100px, 100%);
+      z-index: 1;
+    }
+
+    .brick-scape {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .float-brick {
+      position: absolute;
+      border-radius: 10px;
+      box-shadow:
+        inset 0 2px 0 rgba(255, 255, 255, 0.28),
+        inset 0 -4px 0 rgba(0, 0, 0, 0.08),
+        0 8px 18px rgba(61, 58, 52, 0.1);
+      opacity: 0.55;
+    }
+
+    .float-brick::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: -10px;
+      transform: translateX(-50%);
+      width: calc(100% - 16px);
+      height: 14px;
+      background:
+        radial-gradient(circle at 20% 50%, currentColor 0 5px, transparent 6px),
+        radial-gradient(circle at 50% 50%, currentColor 0 5px, transparent 6px),
+        radial-gradient(circle at 80% 50%, currentColor 0 5px, transparent 6px);
+      opacity: 0.85;
+    }
+
+    .float-brick.b1 {
+      width: 88px; height: 36px; background: var(--brick-red); color: #d99286;
+      top: 8%; left: 4%; transform: rotate(-8deg); animation: bob 7s ease-in-out infinite;
+    }
+    .float-brick.b2 {
+      width: 110px; height: 40px; background: var(--brick-blue); color: #8eafd0;
+      top: 18%; right: 5%; transform: rotate(6deg); animation: bob 8s ease-in-out infinite 0.6s;
+    }
+    .float-brick.b3 {
+      width: 72px; height: 32px; background: var(--brick-yellow); color: #e2c787;
+      bottom: 16%; left: 7%; transform: rotate(10deg); animation: bob 6.5s ease-in-out infinite 1s;
+    }
+    .float-brick.b4 {
+      width: 96px; height: 38px; background: var(--brick-green); color: #88b498;
+      bottom: 10%; right: 8%; transform: rotate(-5deg); animation: bob 7.5s ease-in-out infinite 0.3s;
+    }
+    .float-brick.b5 {
+      width: 64px; height: 30px; background: #b59bc4; color: #c9b3d4;
+      top: 42%; left: 2%; transform: rotate(-14deg); animation: bob 9s ease-in-out infinite 1.4s;
+    }
+    .float-brick.b6 {
+      width: 78px; height: 34px; background: #d4a07a; color: #e0b595;
+      top: 55%; right: 3%; transform: rotate(12deg); animation: bob 8.5s ease-in-out infinite 0.8s;
+    }
+
+    @keyframes bob {
+      0%, 100% { translate: 0 0; }
+      50% { translate: 0 -10px; }
+    }
+
+    .app {
+      width: 100%;
+      min-height: min(860px, calc(100vh - 40px));
+      background: linear-gradient(180deg, #fffef9 0%, var(--card) 40%, #faf6ee 100%);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      padding: 44px 40px 36px;
+      display: grid;
+      gap: 22px;
+      align-content: start;
+      position: relative;
+      border: 4px solid #e4dccb;
+    }
+
+    .app::before {
+      content: "";
+      position: absolute;
+      top: -18px;
+      left: 28px;
+      right: 28px;
+      height: 22px;
+      background: radial-gradient(circle, var(--brick-cream) 0 9px, transparent 10px) 0 0 / 36px 22px repeat-x;
+      filter: drop-shadow(0 2px 0 rgba(61, 58, 52, 0.06));
+    }
+
+    .brick-rail {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin: -6px 0 2px;
+    }
+
+    .mini-brick {
+      height: 18px;
+      border-radius: 5px;
+      position: relative;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.35),
+        inset 0 -2px 0 rgba(0, 0, 0, 0.08);
+    }
+
+    .mini-brick::before {
+      content: "";
+      position: absolute;
+      top: -5px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: inherit;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35);
+      filter: brightness(1.08);
+    }
+
+    .mini-brick.w2 { width: 34px; }
+    .mini-brick.w3 { width: 48px; }
+    .mini-brick.w4 { width: 62px; }
+    .mini-brick.red { background: var(--brick-red); }
+    .mini-brick.blue { background: var(--brick-blue); }
+    .mini-brick.yellow { background: var(--brick-yellow); }
+    .mini-brick.green { background: var(--brick-green); }
+    .mini-brick.purple { background: #b59bc4; }
+    .mini-brick.orange { background: #d4a07a; }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.7rem, 4vw, 2.2rem);
+      letter-spacing: 0.02em;
+      color: var(--accent);
+    }
+
+    .subtitle {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+
+    .header-tools {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .sound-btn {
+      border: none;
+      border-radius: 14px;
+      width: 56px;
+      height: 56px;
+      font-size: 1.6rem;
+      cursor: pointer;
+      background: linear-gradient(180deg, #efe8da, #e4dccb);
+      box-shadow:
+        inset 0 2px 0 rgba(255, 255, 255, 0.5),
+        inset 0 -3px 0 rgba(0, 0, 0, 0.08),
+        0 4px 0 #d0c6b4;
+      line-height: 1;
+    }
+
+    .sound-btn[aria-pressed="true"] { opacity: 0.55; }
+
+    .scoreboard {
+      background: linear-gradient(180deg, #7ea890, var(--accent));
+      color: white;
+      border-radius: 14px;
+      padding: 16px 20px 14px;
+      min-width: 160px;
+      text-align: right;
+      position: relative;
+      box-shadow:
+        inset 0 2px 0 rgba(255, 255, 255, 0.25),
+        inset 0 -4px 0 rgba(0, 0, 0, 0.1),
+        0 6px 14px rgba(61, 58, 52, 0.12);
+    }
+
+    .scoreboard::before {
+      content: "";
+      position: absolute;
+      top: -9px;
+      right: 18px;
+      width: 54px;
+      height: 12px;
+      background:
+        radial-gradient(circle at 16% 50%, #8fbaa1 0 5px, transparent 6px),
+        radial-gradient(circle at 50% 50%, #8fbaa1 0 5px, transparent 6px),
+        radial-gradient(circle at 84% 50%, #8fbaa1 0 5px, transparent 6px);
+    }
+
+    .scoreboard .label {
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.85);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .scoreboard .value {
+      font-size: 2rem;
+      font-weight: bold;
+      color: white;
+    }
+
+    .progress {
+      height: 16px;
+      background: #e8e0d2;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: inset 0 2px 4px rgba(61, 58, 52, 0.08);
+      border: 2px solid #ddd3c2;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background:
+        repeating-linear-gradient(
+          90deg,
+          var(--brick-green) 0 18px,
+          #7eae90 18px 20px,
+          var(--brick-yellow) 20px 38px,
+          #dec488 38px 40px,
+          var(--brick-blue) 40px 58px,
+          #89a8cc 58px 60px,
+          var(--brick-red) 60px 78px,
+          #d18f82 78px 80px
+        );
+      transition: width 0.35s ease;
+    }
+
+    .meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--muted);
+      font-size: 1.05rem;
+      flex-wrap: wrap;
+    }
+
+    .level-pill {
+      background: linear-gradient(180deg, #e8f0ea, var(--accent-soft));
+      color: var(--accent);
+      padding: 8px 16px 6px;
+      border-radius: 10px;
+      font-weight: bold;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+        inset 0 -2px 0 rgba(0, 0, 0, 0.06);
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .level-pill::before {
+      content: "";
+      position: absolute;
+      top: -6px;
+      left: 14px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #b7d0c0;
+      box-shadow: 14px 0 0 #b7d0c0;
+    }
+
+    .mode-star {
+      color: var(--star);
+      line-height: 1;
+    }
+
+    .mode-star.big { font-size: 1.35rem; }
+    .mode-star.small { font-size: 0.85rem; }
+
+    .compare-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      width: 100%;
+    }
+
+    button.pile-card {
+      border: 3px solid #e5d9c4;
+      background: linear-gradient(180deg, #ffffff, #f7f0e4);
+      border-radius: 18px;
+      padding: 28px 18px 22px;
+      cursor: pointer;
+      font: inherit;
+      transition: transform 0.12s ease, border-color 0.15s ease, background 0.15s ease;
+      box-shadow:
+        inset 0 2px 0 rgba(255, 255, 255, 0.7),
+        0 6px 0 #e0d3bc;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      min-height: 260px;
+      justify-content: center;
+    }
+
+    button.pile-card::before {
+      content: "";
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 56px;
+      height: 12px;
+      background:
+        radial-gradient(circle at 20% 50%, #e8dcc6 0 5px, transparent 6px),
+        radial-gradient(circle at 50% 50%, #e8dcc6 0 5px, transparent 6px),
+        radial-gradient(circle at 80% 50%, #e8dcc6 0 5px, transparent 6px);
+    }
+
+    button.pile-card:hover:not(:disabled) {
+      transform: translateY(-3px);
+      border-color: #d5c7ad;
+    }
+
+    button.pile-card:disabled { cursor: default; }
+
+    button.pile-card.side-a .pile-num { color: var(--num-a); }
+    button.pile-card.side-b .pile-num { color: var(--num-b); }
+
+    button.pile-card.correct {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+    }
+
+    button.pile-card.wrong {
+      border-color: var(--wrong);
+      background: var(--wrong-soft);
+    }
+
+    .pile-num {
+      font-size: clamp(3.5rem, 9vw, 5.5rem);
+      font-weight: bold;
+      line-height: 1;
+    }
+
+    .star-pile {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-content: center;
+      gap: 4px 6px;
+      max-width: 200px;
+      min-height: 4.2em;
+      font-size: clamp(1.15rem, 2.6vw, 1.55rem);
+      color: var(--star);
+      line-height: 1.15;
+      letter-spacing: 0.02em;
+    }
+
+    .primary {
+      border: none;
+      background: linear-gradient(180deg, #6f9a82, var(--accent));
+      color: white;
+      min-width: 140px;
+      font: inherit;
+      font-size: 1.5rem;
+      font-weight: bold;
+      border-radius: 14px;
+      position: relative;
+      padding: 26px 18px 18px;
+      cursor: pointer;
+      box-shadow:
+        inset 0 2px 0 rgba(255, 255, 255, 0.28),
+        inset 0 -4px 0 rgba(0, 0, 0, 0.12),
+        0 5px 0 #4a6b58;
+      transition: transform 0.12s ease;
+    }
+
+    .primary::before {
+      content: "";
+      position: absolute;
+      top: 6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 42px;
+      height: 11px;
+      background:
+        radial-gradient(circle at 22% 50%, rgba(255, 255, 255, 0.45) 0 4px, transparent 5px),
+        radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.45) 0 4px, transparent 5px),
+        radial-gradient(circle at 78% 50%, rgba(255, 255, 255, 0.45) 0 4px, transparent 5px);
+    }
+
+    .primary:hover:not(:disabled) { transform: translateY(-2px); }
+
+    .feedback {
+      min-height: 1.6em;
+      text-align: center;
+      font-size: 1.3rem;
+      color: var(--accent);
+      font-weight: bold;
+    }
+
+    .feedback.wrong { color: var(--wrong); }
+
+    .stars {
+      text-align: center;
+      letter-spacing: 0.15em;
+      font-size: 1.6rem;
+      color: var(--star);
+      min-height: 1.6em;
+    }
+
+    .screen {
+      display: none;
+      text-align: center;
+      padding: 24px 8px 8px;
+    }
+
+    .screen.active { display: block; }
+
+    #gameScreen.active {
+      display: grid;
+      gap: 18px;
+      text-align: left;
+    }
+
+    .screen h2 {
+      margin: 0 0 10px;
+      font-size: 2.4rem;
+      color: var(--accent);
+    }
+
+    .screen p {
+      color: var(--muted);
+      font-size: 1.2rem;
+      line-height: 1.5;
+    }
+
+    .final-score {
+      font-size: 3rem;
+      font-weight: bold;
+      margin: 18px 0;
+      color: var(--ink);
+    }
+
+    .actions {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 18px;
+      flex-wrap: wrap;
+    }
+
+    #levelIntro.active {
+      display: grid;
+      gap: 18px;
+      justify-items: center;
+    }
+
+    .intro-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: linear-gradient(180deg, #e8f0ea, var(--accent-soft));
+      color: var(--accent);
+      padding: 10px 18px 8px;
+      border-radius: 12px;
+      font-weight: bold;
+      font-size: 1.35rem;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.5),
+        inset 0 -2px 0 rgba(0, 0, 0, 0.06);
+    }
+
+    .intro-badge .dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .intro-badge .dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #b7d0c0;
+    }
+
+    .intro-badge .dot.on {
+      background: var(--accent);
+      box-shadow: 0 0 0 3px rgba(90, 125, 106, 0.25);
+    }
+
+    .rule-card {
+      width: min(560px, 100%);
+      background: linear-gradient(180deg, #fffefb, var(--warm-soft));
+      border-radius: 18px;
+      padding: 28px 24px 32px;
+      border: 3px solid #e5d9c4;
+      box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.65), 0 8px 0 #e0d3bc;
+    }
+
+    .rule-demo {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      margin: 12px 0 8px;
+    }
+
+    .demo-piles {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .demo-pile {
+      background: linear-gradient(180deg, #ffffff, #f7f0e4);
+      border: 3px solid #e5d9c4;
+      border-radius: 14px;
+      padding: 16px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      min-height: 140px;
+      justify-content: center;
+      box-shadow: 0 4px 0 #e0d3bc;
+    }
+
+    .demo-pile.pick {
+      outline: 4px solid var(--accent);
+      animation: pulse-pick 1.2s ease-in-out infinite;
+    }
+
+    .demo-pile .n {
+      font-size: 2.4rem;
+      font-weight: bold;
+      line-height: 1;
+    }
+
+    .demo-pile.left .n { color: var(--num-a); }
+    .demo-pile.right .n { color: var(--num-b); }
+
+    .demo-pile .s {
+      color: var(--star);
+      font-size: 1.05rem;
+      letter-spacing: 0.02em;
+      line-height: 1.2;
+      text-align: center;
+      max-width: 120px;
+    }
+
+    .mode-cue {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-size: 2.4rem;
+      color: var(--star);
+      min-height: 1.2em;
+    }
+
+    .mode-cue .tiny { font-size: 1.1rem; opacity: 0.85; }
+
+    @keyframes pulse-pick {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.04); }
+    }
+
+    .tap-hand {
+      font-size: 3rem;
+      line-height: 1;
+      animation: tap 1.2s ease-in-out infinite;
+      transform-origin: bottom left;
+    }
+
+    @keyframes tap {
+      0%, 100% { transform: translate(8px, -4px) rotate(-12deg); }
+      50% { transform: translate(0, 6px) rotate(0deg); }
+    }
+
+    .rule-caption {
+      margin: 0;
+      font-size: 1.15rem;
+      color: var(--muted);
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      border: 0;
+    }
+
+    .question-card {
+      background: linear-gradient(180deg, #fffefb, var(--warm-soft));
+      border-radius: 18px;
+      padding: 28px 20px 24px;
+      border: 3px solid #e5d9c4;
+      box-shadow:
+        inset 0 2px 0 rgba(255, 255, 255, 0.65),
+        0 8px 0 #e0d3bc;
+      position: relative;
+    }
+
+    .question-card::after {
+      content: "";
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(280px, 60%);
+      height: 16px;
+      background: radial-gradient(circle, #e8dcc6 0 7px, transparent 8px) 0 0 / 32px 16px repeat-x;
+    }
+
+    .mode-banner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      color: var(--star);
+      font-size: 2rem;
+      min-height: 1.2em;
+    }
+
+    @media (max-width: 700px) {
+      .app {
+        padding: 36px 18px 22px;
+        min-height: auto;
+      }
+
+      .compare-row { gap: 12px; }
+
+      button.pile-card {
+        min-height: 220px;
+        padding: 24px 10px 18px;
+      }
+
+      .float-brick { opacity: 0.28; scale: 0.85; }
+      .float-brick.b5,
+      .float-brick.b6 { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="brick-scape" aria-hidden="true">
+    <div class="float-brick b1"></div>
+    <div class="float-brick b2"></div>
+    <div class="float-brick b3"></div>
+    <div class="float-brick b4"></div>
+    <div class="float-brick b5"></div>
+    <div class="float-brick b6"></div>
+  </div>
+
+  <div class="playfield">
+  <div class="app">
+    <div class="brick-rail" aria-hidden="true">
+      <span class="mini-brick w3 red"></span>
+      <span class="mini-brick w2 blue"></span>
+      <span class="mini-brick w4 yellow"></span>
+      <span class="mini-brick w2 green"></span>
+      <span class="mini-brick w3 purple"></span>
+      <span class="mini-brick w2 orange"></span>
+      <span class="mini-brick w4 blue"></span>
+      <span class="mini-brick w3 green"></span>
+    </div>
+
+    <header>
+      <div>
+        <h1>More or Less Stars</h1>
+        <p class="subtitle">Compare star piles · numbers 1–10</p>
+      </div>
+      <div class="header-tools">
+        <button
+          class="sound-btn"
+          id="soundBtn"
+          type="button"
+          aria-pressed="false"
+          aria-label="Mute sound"
+          title="Sound on/off"
+        >🔊</button>
+        <div class="scoreboard">
+          <div class="label">Score</div>
+          <div class="value"><span id="score">0</span> / <span id="totalScore">20</span></div>
+        </div>
+      </div>
+    </header>
+
+    <div class="progress" aria-hidden="true">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <div id="startScreen" class="screen active">
+      <h2>Ready to play?</h2>
+      <p>
+        Two levels · 20 questions<br />
+        First find <strong>more</strong> · then find <strong>less</strong>
+      </p>
+      <div class="actions">
+        <button class="primary" id="startBtn" type="button">Start</button>
+      </div>
+    </div>
+
+    <div id="levelIntro" class="screen" aria-live="polite">
+      <div class="intro-badge">
+        <span class="dots" aria-hidden="true">
+          <span class="dot on" id="dot1"></span>
+          <span class="dot" id="dot2"></span>
+        </span>
+        <span id="introLevelText">Level 1</span>
+      </div>
+
+      <div class="rule-card">
+        <div class="rule-demo" id="ruleDemo"></div>
+        <p class="rule-caption" id="ruleCaption"></p>
+        <p class="sr-only" id="ruleAria"></p>
+      </div>
+
+      <div class="actions">
+        <button class="primary" id="beginLevelBtn" type="button">Go!</button>
+      </div>
+    </div>
+
+    <div id="gameScreen" class="screen">
+      <div class="meta">
+        <span class="level-pill" id="levelLabel">
+          <span class="mode-star big" aria-hidden="true">★</span>
+          Level 1 · More
+        </span>
+        <span id="questionCounter">Question 1 of 20</span>
+      </div>
+
+      <div class="question-card">
+        <div class="mode-banner" id="modeBanner" aria-hidden="true">★</div>
+        <div class="compare-row" id="compareRow" aria-live="polite"></div>
+      </div>
+
+      <div class="stars" id="stars" aria-live="polite"></div>
+      <div class="feedback" id="feedback" aria-live="polite"></div>
+    </div>
+
+    <div id="endScreen" class="screen">
+      <h2>Well done!</h2>
+      <div class="brick-rail" aria-hidden="true">
+        <span class="mini-brick w2 yellow"></span>
+        <span class="mini-brick w3 red"></span>
+        <span class="mini-brick w2 blue"></span>
+        <span class="mini-brick w4 green"></span>
+      </div>
+      <div class="stars" id="endStars"></div>
+      <div class="final-score"><span id="finalScore">0</span> / 20</div>
+      <p id="endMessage">You did great comparing today.</p>
+      <div class="actions">
+        <button class="primary" id="playAgainBtn" type="button">Play again</button>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <script>
+    const LEVEL1_COUNT = 10;
+    const TOTAL = 20;
+
+    const praiseCorrect = [
+      "Nice work!",
+      "You got it!",
+      "Brilliant!",
+      "Super star!",
+      "Well done!",
+      "Yes!",
+    ];
+
+    const praiseWrong = [
+      "Almost — try the next one!",
+      "Good try — keep going!",
+      "That's okay — you're learning!",
+      "Nice effort — next question!",
+    ];
+
+    const state = {
+      index: 0,
+      score: 0,
+      questions: [],
+      locked: false,
+      pendingLevel: 1,
+      soundOn: true,
+    };
+
+    const els = {
+      startScreen: document.getElementById("startScreen"),
+      levelIntro: document.getElementById("levelIntro"),
+      gameScreen: document.getElementById("gameScreen"),
+      endScreen: document.getElementById("endScreen"),
+      startBtn: document.getElementById("startBtn"),
+      beginLevelBtn: document.getElementById("beginLevelBtn"),
+      playAgainBtn: document.getElementById("playAgainBtn"),
+      soundBtn: document.getElementById("soundBtn"),
+      score: document.getElementById("score"),
+      progressBar: document.getElementById("progressBar"),
+      levelLabel: document.getElementById("levelLabel"),
+      questionCounter: document.getElementById("questionCounter"),
+      modeBanner: document.getElementById("modeBanner"),
+      compareRow: document.getElementById("compareRow"),
+      feedback: document.getElementById("feedback"),
+      stars: document.getElementById("stars"),
+      endStars: document.getElementById("endStars"),
+      finalScore: document.getElementById("finalScore"),
+      endMessage: document.getElementById("endMessage"),
+      introLevelText: document.getElementById("introLevelText"),
+      ruleDemo: document.getElementById("ruleDemo"),
+      ruleCaption: document.getElementById("ruleCaption"),
+      ruleAria: document.getElementById("ruleAria"),
+      dot1: document.getElementById("dot1"),
+      dot2: document.getElementById("dot2"),
+    };
+
+    const audio = {
+      ctx: null,
+      master: null,
+
+      unlock() {
+        if (!this.ctx) {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          if (!AC) return;
+          this.ctx = new AC();
+          this.master = this.ctx.createGain();
+          this.master.gain.value = state.soundOn ? 0.55 : 0;
+          this.master.connect(this.ctx.destination);
+        }
+        if (this.ctx.state === "suspended") this.ctx.resume();
+      },
+
+      setMuted(muted) {
+        state.soundOn = !muted;
+        if (this.master) {
+          this.master.gain.setTargetAtTime(muted ? 0 : 0.55, this.ctx.currentTime, 0.05);
+        }
+        els.soundBtn.textContent = muted ? "🔇" : "🔊";
+        els.soundBtn.setAttribute("aria-pressed", muted ? "true" : "false");
+        els.soundBtn.setAttribute("aria-label", muted ? "Unmute sound" : "Mute sound");
+      },
+
+      tone(freq, start, dur, type, gain) {
+        if (!this.ctx || !this.master) return;
+        const osc = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        osc.type = type || "sine";
+        osc.frequency.value = freq;
+        g.gain.setValueAtTime(0.0001, start);
+        g.gain.exponentialRampToValueAtTime(gain || 0.2, start + 0.02);
+        g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+        osc.connect(g);
+        g.connect(this.master);
+        osc.start(start);
+        osc.stop(start + dur + 0.02);
+      },
+
+      playCorrect() {
+        if (!state.soundOn) return;
+        this.unlock();
+        const t = this.ctx.currentTime;
+        this.tone(523.25, t, 0.14, "triangle", 0.28);
+        this.tone(659.25, t + 0.09, 0.16, "triangle", 0.28);
+        this.tone(783.99, t + 0.18, 0.22, "triangle", 0.26);
+        this.tone(1046.5, t + 0.28, 0.2, "sine", 0.16);
+      },
+
+      playWrong() {
+        if (!state.soundOn) return;
+        this.unlock();
+        const t = this.ctx.currentTime;
+        this.tone(247, t, 0.18, "square", 0.12);
+        this.tone(196, t + 0.14, 0.28, "square", 0.1);
+      },
+    };
+
+    function randInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function pick(list) {
+      return list[randInt(0, list.length - 1)];
+    }
+
+    function starString(count) {
+      return "★".repeat(count);
+    }
+
+    function shuffle(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = randInt(0, i);
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function allPairs() {
+      const list = [];
+      for (let a = 1; a <= 10; a++) {
+        for (let b = 1; b <= 10; b++) {
+          if (a === b) continue;
+          list.push({ a, b, diff: Math.abs(a - b) });
+        }
+      }
+      return list;
+    }
+
+    function buildModeQuestions(mode, count) {
+      const pool = shuffle(allPairs());
+      const close = pool.filter((p) => p.diff <= 2);
+      const easy = pool.filter((p) => p.diff >= 3);
+      const half = Math.floor(count / 2);
+
+      const selected = shuffle([
+        ...close.slice(0, half),
+        ...easy.slice(0, count - half),
+      ]).slice(0, count);
+
+      // Fill if needed
+      if (selected.length < count) {
+        const used = new Set(selected.map((p) => `${p.a}:${p.b}`));
+        for (const p of pool) {
+          if (selected.length >= count) break;
+          const key = `${p.a}:${p.b}`;
+          if (!used.has(key)) {
+            selected.push(p);
+            used.add(key);
+          }
+        }
+      }
+
+      return selected.map((p) => ({
+        mode,
+        left: p.a,
+        right: p.b,
+        answer: mode === "more" ? Math.max(p.a, p.b) : Math.min(p.a, p.b),
+      }));
+    }
+
+    function buildQuestions() {
+      return [
+        ...buildModeQuestions("more", LEVEL1_COUNT),
+        ...buildModeQuestions("less", LEVEL1_COUNT),
+      ];
+    }
+
+    function getLevelInfo(index) {
+      if (index < LEVEL1_COUNT) {
+        return {
+          level: 1,
+          mode: "more",
+          label: `<span class="mode-star big" aria-hidden="true">★</span> Level 1 · More`,
+        };
+      }
+      return {
+        level: 2,
+        mode: "less",
+        label: `<span class="mode-star small" aria-hidden="true">★</span> Level 2 · Less`,
+      };
+    }
+
+    function showScreen(name) {
+      els.startScreen.classList.toggle("active", name === "start");
+      els.levelIntro.classList.toggle("active", name === "intro");
+      els.gameScreen.classList.toggle("active", name === "game");
+      els.endScreen.classList.toggle("active", name === "end");
+    }
+
+    function updateScoreboard() {
+      els.score.textContent = String(state.score);
+      const done = Math.min(state.index, TOTAL);
+      els.progressBar.style.width = `${(done / TOTAL) * 100}%`;
+    }
+
+    function clearFeedback() {
+      els.feedback.textContent = "";
+      els.feedback.classList.remove("wrong");
+      els.stars.textContent = "";
+    }
+
+    function renderLevelIntro(level) {
+      state.pendingLevel = level;
+      els.introLevelText.textContent = `Level ${level}`;
+      els.dot1.classList.toggle("on", true);
+      els.dot2.classList.toggle("on", level === 2);
+
+      if (level === 1) {
+        els.ruleDemo.innerHTML = `
+          <div class="mode-cue" aria-hidden="true"><span>★</span></div>
+          <div class="demo-piles" aria-hidden="true">
+            <div class="demo-pile left">
+              <div class="n">3</div>
+              <div class="s">${starString(3)}</div>
+            </div>
+            <div class="demo-pile right pick">
+              <div class="n">7</div>
+              <div class="s">${starString(7)}</div>
+            </div>
+          </div>
+          <div class="tap-hand" aria-hidden="true">👆</div>
+        `;
+        els.ruleCaption.textContent = "Tap the pile with more stars.";
+        els.ruleAria.textContent = "Level 1: tap the card that has more stars.";
+      } else {
+        els.ruleDemo.innerHTML = `
+          <div class="mode-cue" aria-hidden="true"><span class="tiny">★</span></div>
+          <div class="demo-piles" aria-hidden="true">
+            <div class="demo-pile left pick">
+              <div class="n">2</div>
+              <div class="s">${starString(2)}</div>
+            </div>
+            <div class="demo-pile right">
+              <div class="n">8</div>
+              <div class="s">${starString(8)}</div>
+            </div>
+          </div>
+          <div class="tap-hand" aria-hidden="true">👆</div>
+        `;
+        els.ruleCaption.textContent = "Tap the pile with fewer stars.";
+        els.ruleAria.textContent = "Level 2: tap the card that has fewer stars.";
+      }
+
+      showScreen("intro");
+    }
+
+    function makePileCard(value, sideClass) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = `pile-card ${sideClass}`;
+      btn.dataset.value = String(value);
+
+      const num = document.createElement("div");
+      num.className = "pile-num";
+      num.textContent = String(value);
+
+      const pile = document.createElement("div");
+      pile.className = "star-pile";
+      pile.setAttribute("aria-hidden", "true");
+      pile.textContent = starString(value);
+
+      btn.append(num, pile);
+      btn.setAttribute("aria-label", `${value} stars`);
+      return btn;
+    }
+
+    function renderQuestion() {
+      clearFeedback();
+      state.locked = false;
+
+      const q = state.questions[state.index];
+      const qNum = state.index + 1;
+      const level = getLevelInfo(state.index);
+
+      els.questionCounter.textContent = `Question ${qNum} of ${TOTAL}`;
+      els.levelLabel.innerHTML = level.label;
+      els.modeBanner.innerHTML =
+        level.mode === "more"
+          ? '<span class="mode-star big">★</span>'
+          : '<span class="mode-star small">★</span>';
+      els.modeBanner.setAttribute(
+        "aria-label",
+        level.mode === "more" ? "Find more stars" : "Find fewer stars"
+      );
+
+      els.compareRow.replaceChildren();
+      const left = makePileCard(q.left, "side-a");
+      const right = makePileCard(q.right, "side-b");
+
+      left.addEventListener("click", () => handleAnswer(q.left, left));
+      right.addEventListener("click", () => handleAnswer(q.right, right));
+
+      els.compareRow.append(left, right);
+      els.compareRow.setAttribute(
+        "aria-label",
+        `${level.mode === "more" ? "Which has more" : "Which has fewer"}: ${q.left} or ${q.right}`
+      );
+
+      updateScoreboard();
+    }
+
+    function handleAnswer(value, choiceBtn) {
+      if (state.locked) return;
+      state.locked = true;
+
+      const q = state.questions[state.index];
+      const correct = Number(value) === q.answer;
+      const cards = [...els.compareRow.querySelectorAll("button.pile-card")];
+
+      if (correct) {
+        state.score += 1;
+        els.feedback.textContent = pick(praiseCorrect);
+        els.feedback.classList.remove("wrong");
+        els.stars.textContent = starString(Math.min(5, 1 + Math.floor(state.score / 4)));
+        choiceBtn.classList.add("correct");
+        audio.playCorrect();
+      } else {
+        els.feedback.textContent = pick(praiseWrong);
+        els.feedback.classList.add("wrong");
+        els.stars.textContent = "";
+        choiceBtn.classList.add("wrong");
+        cards.forEach((btn) => {
+          if (Number(btn.dataset.value) === q.answer) btn.classList.add("correct");
+        });
+        audio.playWrong();
+      }
+
+      cards.forEach((btn) => {
+        btn.disabled = true;
+      });
+
+      updateScoreboard();
+
+      window.setTimeout(() => {
+        const finishedLevel1 = state.index + 1 === LEVEL1_COUNT;
+        state.index += 1;
+
+        if (state.index >= TOTAL) {
+          finishGame();
+        } else if (finishedLevel1) {
+          renderLevelIntro(2);
+        } else {
+          renderQuestion();
+        }
+      }, 1100);
+    }
+
+    function finishGame() {
+      showScreen("end");
+      els.progressBar.style.width = "100%";
+      els.finalScore.textContent = String(state.score);
+      els.endStars.textContent = starString(
+        state.score >= 18 ? 5 : state.score >= 15 ? 4 : state.score >= 11 ? 3 : state.score >= 7 ? 2 : 1
+      );
+
+      if (state.score === TOTAL) {
+        els.endMessage.textContent = "Perfect score! You're a comparing star.";
+      } else if (state.score >= 16) {
+        els.endMessage.textContent = "Fantastic — more and less are getting easy!";
+      } else if (state.score >= 10) {
+        els.endMessage.textContent = "Great effort today. Want to try again?";
+      } else {
+        els.endMessage.textContent = "Nice start! Every try helps your brain grow.";
+      }
+    }
+
+    function startGame() {
+      audio.unlock();
+      state.index = 0;
+      state.score = 0;
+      state.questions = buildQuestions();
+      state.locked = false;
+      updateScoreboard();
+      renderLevelIntro(1);
+    }
+
+    function beginLevel() {
+      audio.unlock();
+      showScreen("game");
+      renderQuestion();
+    }
+
+    els.startBtn.addEventListener("click", startGame);
+    els.beginLevelBtn.addEventListener("click", beginLevel);
+    els.playAgainBtn.addEventListener("click", startGame);
+    els.soundBtn.addEventListener("click", () => {
+      audio.unlock();
+      audio.setMuted(state.soundOn);
+    });
+  </script>
+</body>
+</html>
