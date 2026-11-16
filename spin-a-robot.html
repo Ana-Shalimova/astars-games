@@ -1037,11 +1037,38 @@
         return;
       }
       const clone = svg.cloneNode(true);
-      if (!clone.getAttribute("xmlns")) {
-        clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-      }
+      clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+      clone.removeAttribute("class");
+
+      // Standalone file needs styles baked in (page CSS does not travel with the SVG)
+      const style = document.createElementNS("http://www.w3.org/2000/svg", "style");
+      style.textContent = `
+        .stroke {
+          fill: none !important;
+          stroke: #2f2c28;
+          stroke-width: 3;
+          stroke-linecap: round;
+          stroke-linejoin: round;
+        }
+        .fill-soft {
+          fill: #f7f3ea;
+          stroke: #2f2c28;
+          stroke-width: 3;
+          stroke-linejoin: round;
+        }
+        .pupil { fill: #2f2c28; stroke: none; }
+      `;
+      const bg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      bg.setAttribute("width", "100%");
+      bg.setAttribute("height", "100%");
+      bg.setAttribute("fill", "#f3efe6");
+      clone.insertBefore(style, clone.firstChild);
+      clone.insertBefore(bg, style.nextSibling);
+
+      const serializer = new XMLSerializer();
+      const svgText = serializer.serializeToString(clone);
       const blob = new Blob(
-        ['<?xml version="1.0" encoding="UTF-8"?>', clone.outerHTML],
+        ['<?xml version="1.0" encoding="UTF-8"?>', svgText],
         { type: "image/svg+xml;charset=utf-8" }
       );
       const url = URL.createObjectURL(blob);
