@@ -200,12 +200,10 @@
       flex-wrap: wrap;
     }
 
-    .sound-btn {
+    .sound-btn, .home-btn {
       border: none;
       border-radius: 14px;
-      width: 56px;
       height: 56px;
-      font-size: 1.6rem;
       cursor: pointer;
       background: linear-gradient(180deg, #efe8da, #e4dccb);
       box-shadow:
@@ -213,7 +211,16 @@
         inset 0 -3px 0 rgba(0, 0, 0, 0.08),
         0 4px 0 #d0c6b4;
       line-height: 1;
+      font: inherit;
+      font-weight: bold;
+      color: var(--ink);
+      text-decoration: none;
+      display: inline-grid;
+      place-items: center;
     }
+
+    .sound-btn { width: 56px; font-size: 1.6rem; }
+    .home-btn { padding: 0 14px; font-size: 0.95rem; }
 
     .sound-btn[aria-pressed="true"] { opacity: 0.55; }
 
@@ -765,6 +772,7 @@
         <p class="subtitle">Make both sides the same</p>
       </div>
       <div class="header-tools">
+        <a class="home-btn" href="index.html">Home</a>
         <button class="sound-btn" id="soundBtn" type="button" aria-pressed="false" aria-label="Mute sound">🔊</button>
         <div class="scoreboard">
           <div class="label">Score</div>

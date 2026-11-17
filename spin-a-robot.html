@@ -114,11 +114,15 @@
     .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 1.05rem; }
     .header-tools { display: flex; align-items: center; gap: 12px; }
 
-    .sound-btn {
-      border: none; border-radius: 14px; width: 56px; height: 56px; font-size: 1.6rem; cursor: pointer;
+    .sound-btn, .home-btn {
+      border: none; border-radius: 14px; height: 56px; cursor: pointer;
       background: linear-gradient(180deg, #efe8da, #e4dccb);
       box-shadow: inset 0 2px 0 rgba(255,255,255,0.5), inset 0 -3px 0 rgba(0,0,0,0.08), 0 4px 0 #d0c6b4;
+      font: inherit; font-weight: bold; color: var(--ink); text-decoration: none;
+      display: inline-grid; place-items: center; line-height: 1;
     }
+    .sound-btn { width: 56px; font-size: 1.6rem; }
+    .home-btn { padding: 0 14px; font-size: 0.95rem; }
     .sound-btn[aria-pressed="true"] { opacity: 0.55; }
 
     .scoreboard {
@@ -329,28 +333,6 @@
     .step-dot.current { background: var(--brick-yellow); box-shadow: 0 0 0 3px rgba(212,168,75,0.35); }
 
     .actions { display: flex; justify-content: center; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
-    .ghost-btn {
-      border: 3px solid #e5d9c4;
-      background: linear-gradient(180deg, #fffefb, var(--warm-soft));
-      color: var(--ink);
-      min-width: 140px;
-      font: inherit;
-      font-size: 1.15rem;
-      font-weight: bold;
-      border-radius: 14px;
-      padding: 14px 18px;
-      cursor: pointer;
-      box-shadow: inset 0 2px 0 rgba(255,255,255,0.65), 0 4px 0 #e0d3bc;
-    }
-    .ghost-btn:hover { transform: translateY(-2px); }
-    .share-note {
-      min-height: 1.3em;
-      margin: 0;
-      font-size: 1rem;
-      color: var(--accent);
-      font-weight: bold;
-      text-align: center;
-    }
     #startScreen.active, #endScreen.active { display: grid; gap: 16px; justify-items: center; }
 
     .rule-card {
@@ -395,6 +377,7 @@
         <p class="subtitle">Press the button · head, face, torso, arms, legs, feet</p>
       </div>
       <div class="header-tools">
+        <a class="home-btn" href="index.html">Home</a>
         <button class="sound-btn" id="soundBtn" type="button" aria-pressed="false" aria-label="Mute sound">🔊</button>
         <div class="scoreboard">
           <div class="label">Part</div>
@@ -450,11 +433,8 @@
       <p class="final-title">★★★ Meet your creation ★★★</p>
       <div class="end-robot" id="endRobot"></div>
       <div class="actions">
-        <button class="ghost-btn" id="shareBtn" type="button">Share</button>
-        <button class="ghost-btn" id="downloadBtn" type="button">Download</button>
         <button class="primary" id="playAgainBtn" type="button">Build again</button>
       </div>
-      <p class="share-note" id="shareNote" aria-live="polite"></p>
     </div>
   </div>
   </div>
@@ -535,9 +515,6 @@
       endScreen: document.getElementById("endScreen"),
       startBtn: document.getElementById("startBtn"),
       playAgainBtn: document.getElementById("playAgainBtn"),
-      shareBtn: document.getElementById("shareBtn"),
-      downloadBtn: document.getElementById("downloadBtn"),
-      shareNote: document.getElementById("shareNote"),
       soundBtn: document.getElementById("soundBtn"),
       partNum: document.getElementById("partNum"),
       progressBar: document.getElementById("progressBar"),
@@ -1001,95 +978,11 @@
       updateHud();
     }
 
-    function getEndRobotSvg() {
-      return els.endRobot.querySelector("svg");
-    }
-
-    function setShareNote(text) {
-      els.shareNote.textContent = text || "";
-    }
-
-    async function shareRobot() {
-      const pageUrl = window.location.href;
-      const shareData = {
-        title: "Build a Robot — Astars",
-        text: "I built a silly robot on Astars!",
-        url: pageUrl,
-      };
-      try {
-        if (navigator.share) {
-          await navigator.share(shareData);
-          setShareNote("Shared!");
-          return;
-        }
-        await navigator.clipboard.writeText(pageUrl);
-        setShareNote("Link copied!");
-      } catch (err) {
-        if (err && err.name === "AbortError") return;
-        setShareNote("Could not share — copy the page link instead.");
-      }
-    }
-
-    function downloadRobot() {
-      const svg = getEndRobotSvg();
-      if (!svg) {
-        setShareNote("Finish a robot first.");
-        return;
-      }
-      const clone = svg.cloneNode(true);
-      clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-      clone.removeAttribute("class");
-
-      // Standalone file needs styles baked in (page CSS does not travel with the SVG)
-      const style = document.createElementNS("http://www.w3.org/2000/svg", "style");
-      style.textContent = `
-        .stroke {
-          fill: none !important;
-          stroke: #2f2c28;
-          stroke-width: 3;
-          stroke-linecap: round;
-          stroke-linejoin: round;
-        }
-        .fill-soft {
-          fill: #f7f3ea;
-          stroke: #2f2c28;
-          stroke-width: 3;
-          stroke-linejoin: round;
-        }
-        .pupil { fill: #2f2c28; stroke: none; }
-      `;
-      const bg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-      bg.setAttribute("width", "100%");
-      bg.setAttribute("height", "100%");
-      bg.setAttribute("fill", "#f3efe6");
-      clone.insertBefore(style, clone.firstChild);
-      clone.insertBefore(bg, style.nextSibling);
-
-      const serializer = new XMLSerializer();
-      const svgText = serializer.serializeToString(clone);
-      const blob = new Blob(
-        ['<?xml version="1.0" encoding="UTF-8"?>', svgText],
-        { type: "image/svg+xml;charset=utf-8" }
-      );
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "my-astars-robot.svg";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-      setShareNote("Downloaded!");
-    }
-
     els.startBtn.addEventListener("click", beginPlay);
     els.playAgainBtn.addEventListener("click", () => {
       stopDance();
-      setShareNote("");
       startGame();
     });
-    els.shareBtn.addEventListener("click", shareRobot);
-    els.downloadBtn.addEventListener("click", downloadRobot);
     els.spinBtn.addEventListener("click", runSpin);
     els.soundBtn.addEventListener("click", () => {
       audio.unlock();
