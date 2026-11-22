@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Fuel Run</title>
+  <style>
+    :root {
+      --bg: #f3efe6;
+      --card: #fffcf7;
+      --ink: #3d3a34;
+      --muted: #7a7468;
+      --accent: #5a7d6a;
+      --accent-soft: #d5e4db;
+      --warm-soft: #f0e6d4;
+      --star: #d4a84b;
+      --fuel: #5a7d6a;
+      --fuel-low: #a66b5e;
+      --brick-red: #c4786a;
+      --brick-blue: #6d8fb8;
+      --brick-yellow: #d4b56a;
+      --brick-green: #6a9a7c;
+      --brick-cream: #efe6d4;
+      --car-body: #c4786a;
+      --car-dark: #8f5549;
+      --shadow: 0 14px 40px rgba(61, 58, 52, 0.1);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse at top left, #efe8d8 0%, transparent 50%),
+        radial-gradient(ellipse at bottom right, #dde8e2 0%, transparent 45%),
+        var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      overflow-x: hidden;
+    }
+
+    .playfield { position: relative; width: min(980px, 100%); z-index: 1; }
+
+    .brick-scape {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+    }
+    .float-brick {
+      position: absolute; border-radius: 10px; opacity: 0.45;
+      box-shadow: inset 0 2px 0 rgba(255,255,255,0.28), inset 0 -4px 0 rgba(0,0,0,0.08), 0 8px 18px rgba(61,58,52,0.1);
+    }
+    .float-brick::before {
+      content: "";
+      position: absolute; left: 50%; top: -10px; transform: translateX(-50%);
+      width: calc(100% - 16px); height: 14px;
+      background:
+        radial-gradient(circle at 20% 50%, currentColor 0 5px, transparent 6px),
+        radial-gradient(circle at 50% 50%, currentColor 0 5px, transparent 6px),
+        radial-gradient(circle at 80% 50%, currentColor 0 5px, transparent 6px);
+      opacity: 0.85;
+    }
+    .float-brick.b1 { width: 88px; height: 36px; background: var(--brick-red); color: #d99286; top: 8%; left: 4%; transform: rotate(-8deg); animation: bob 7s ease-in-out infinite; }
+    .float-brick.b2 { width: 110px; height: 40px; background: var(--brick-blue); color: #8eafd0; top: 18%; right: 5%; transform: rotate(6deg); animation: bob 8s ease-in-out infinite 0.6s; }
+    .float-brick.b3 { width: 72px; height: 32px; background: var(--brick-yellow); color: #e2c787; bottom: 16%; left: 7%; transform: rotate(10deg); animation: bob 6.5s ease-in-out infinite 1s; }
+    .float-brick.b4 { width: 96px; height: 38px; background: var(--brick-green); color: #88b498; bottom: 10%; right: 8%; transform: rotate(-5deg); animation: bob 7.5s ease-in-out infinite 0.3s; }
+
+    @keyframes bob {
+      0%, 100% { translate: 0 0; }
+      50% { translate: 0 -10px; }
+    }
+
+    .app {
+      width: 100%;
+      min-height: min(900px, calc(100vh - 32px));
+      background: linear-gradient(180deg, #fffef9 0%, var(--card) 40%, #faf6ee 100%);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      padding: 40px 24px 22px;
+      display: grid;
+      gap: 12px;
+      align-content: start;
+      position: relative;
+      border: 4px solid #e4dccb;
+    }
+
+    .app::before {
+      content: "";
+      position: absolute; top: -18px; left: 28px; right: 28px; height: 22px;
+      background: radial-gradient(circle, var(--brick-cream) 0 9px, transparent 10px) 0 0 / 36px 22px repeat-x;
+    }
+
+    .brick-rail { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin: -4px 0 2px; }
+    .mini-brick {
+      height: 18px; border-radius: 5px; position: relative;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -2px 0 rgba(0,0,0,0.08);
+    }
+    .mini-brick::before {
+      content: "";
+      position: absolute; top: -5px; left: 50%; transform: translateX(-50%);
+      width: 8px; height: 8px; border-radius: 50%; background: inherit; filter: brightness(1.08);
+    }
+    .mini-brick.w2 { width: 34px; } .mini-brick.w3 { width: 48px; } .mini-brick.w4 { width: 62px; }
+    .mini-brick.red { background: var(--brick-red); }
+    .mini-brick.blue { background: var(--brick-blue); }
+    .mini-brick.yellow { background: var(--brick-yellow); }
+    .mini-brick.green { background: var(--brick-green); }
+    .mini-brick.purple { background: #b59bc4; }
+    .mini-brick.orange { background: #d4a07a; }
+
+    header {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      gap: 12px; flex-wrap: wrap;
+    }
+    h1 { margin: 0; font-size: clamp(1.6rem, 4vw, 2.2rem); color: var(--accent); }
+    .subtitle { margin: 6px 0 0; color: var(--muted); font-size: 1.05rem; }
+    .header-tools { display: flex; align-items: center; gap: 10px; }
+
+    .sound-btn, .home-btn {
+      border: none; border-radius: 14px; height: 56px; cursor: pointer;
+      background: linear-gradient(180deg, #efe8da, #e4dccb);
+      box-shadow: inset 0 2px 0 rgba(255,255,255,0.5), inset 0 -3px 0 rgba(0,0,0,0.08), 0 4px 0 #d0c6b4;
+      font: inherit; font-weight: bold; color: var(--ink); text-decoration: none;
+      display: inline-grid; place-items: center; line-height: 1;
+    }
+    .sound-btn { width: 56px; font-size: 1.6rem; }
+    .home-btn { padding: 0 14px; font-size: 0.95rem; }
+    .sound-btn[aria-pressed="true"] { opacity: 0.55; }
+
+    .scoreboard {
+      background: linear-gradient(180deg, #7ea890, var(--accent));
+      color: white; border-radius: 14px; padding: 12px 16px 10px; min-width: 120px;
+      text-align: right; position: relative;
+      box-shadow: inset 0 2px 0 rgba(255,255,255,0.25), inset 0 -4px 0 rgba(0,0,0,0.1);
+    }
+    .scoreboard::before {
+      content: "";
+      position: absolute; top: -9px; right: 14px; width: 48px; height: 12px;
+      background:
+        radial-gradient(circle at 16% 50%, #8fbaa1 0 5px, transparent 6px),
+        radial-gradient(circle at 50% 50%, #8fbaa1 0 5px, transparent 6px),
+        radial-gradient(circle at 84% 50%, #8fbaa1 0 5px, transparent 6px);
+    }
+    .scoreboard .label {
+      font-size: 0.75rem; color: rgba(255,255,255,0.85);
+      text-transform: uppercase; letter-spacing: 0.06em;
+    }
+    .scoreboard .value { font-size: 1.45rem; font-weight: bold; font-variant-numeric: tabular-nums; }
+
+    .screen { display: none; text-align: center; padding: 8px 4px; }
+    .screen.active { display: grid; gap: 14px; justify-items: center; align-content: center; }
+    #gameScreen.active {
+      display: grid;
+      gap: 10px;
+      width: 100%;
+      justify-items: stretch;
+      text-align: left;
+    }
+
+    .screen h2 { margin: 0; font-size: clamp(1.7rem, 4vw, 2.1rem); color: var(--accent); }
+    .screen p { color: var(--muted); font-size: 1.1rem; line-height: 1.45; margin: 0; }
+
+    .rule-card {
+      width: min(520px, 100%);
+      background: linear-gradient(180deg, #fffefb, var(--warm-soft));
+      border-radius: 18px; padding: 22px 18px;
+      border: 3px solid #e5d9c4;
+      box-shadow: inset 0 2px 0 rgba(255,255,255,0.65), 0 8px 0 #e0d3bc;
+      position: relative;
+    }
+    .rule-card::after {
+      content: "";
+      position: absolute; top: -14px; left: 50%; transform: translateX(-50%);
+      width: min(220px, 55%); height: 16px;
+      background: radial-gradient(circle, #e8dcc6 0 7px, transparent 8px) 0 0 / 32px 16px repeat-x;
+    }
+    .demo-row {
+      display: flex; justify-content: center; align-items: center; gap: 14px;
+      margin-bottom: 12px; font-size: 1.8rem;
+    }
+    .demo-can, .demo-car {
+      width: 58px; height: 58px; border-radius: 14px;
+      display: grid; place-items: center; font-weight: bold;
+      box-shadow: inset 0 2px 0 rgba(255,255,255,0.4), 0 3px 0 rgba(0,0,0,0.08);
+    }
+    .demo-can { background: linear-gradient(180deg, #e8f0ea, var(--accent-soft)); color: var(--accent); }
+    .demo-car {
+      background: linear-gradient(180deg, #d99286, var(--car-body));
+      color: white; font-size: 1.4rem;
+    }
+
+    .meta {
+      display: flex; justify-content: space-between; align-items: center;
+      gap: 10px; flex-wrap: wrap;
+    }
+    .target-pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--accent-soft); color: var(--accent);
+      border-radius: 999px; padding: 8px 14px; font-weight: bold;
+    }
+    .target-pill .num {
+      width: 28px; height: 28px; border-radius: 8px;
+      display: grid; place-items: center;
+      background: white; color: var(--ink); font-size: 1.1rem;
+    }
+
+    .fuel-wrap { display: grid; gap: 6px; }
+    .fuel-label {
+      display: flex; justify-content: space-between;
+      font-size: 0.9rem; font-weight: bold; color: var(--muted);
+    }
+    .fuel-track {
+      height: 16px; border-radius: 999px; background: #e8dfd0; overflow: hidden;
+      box-shadow: inset 0 2px 4px rgba(61,58,52,0.08);
+    }
+    .fuel-bar {
+      height: 100%; width: 100%;
+      background: linear-gradient(90deg, #6f9a82, var(--fuel));
+      border-radius: inherit;
+      transition: width 0.1s linear, background 0.2s ease;
+    }
+    .fuel-bar.low {
+      background: linear-gradient(90deg, #c4786a, var(--fuel-low));
+    }
+
+    .arena-card {
+      background: linear-gradient(180deg, #fffefb, var(--warm-soft));
+      border-radius: 20px; padding: 12px;
+      border: 3px solid #e5d9c4;
+      box-shadow: inset 0 2px 0 rgba(255,255,255,0.65), 0 8px 0 #e0d3bc;
+    }
+
+    .arena {
+      position: relative;
+      height: min(52vh, 480px);
+      border-radius: 14px;
+      overflow: hidden;
+      background:
+        repeating-linear-gradient(
+          90deg,
+          transparent 0,
+          transparent calc(20% - 1px),
+          rgba(61,58,52,0.06) calc(20% - 1px),
+          rgba(61,58,52,0.06) 20%
+        ),
+        linear-gradient(180deg, #e8e2d6 0%, #ddd5c5 100%);
+    }
+
+    .road-lines {
+      position: absolute; inset: 0; pointer-events: none;
+      background: repeating-linear-gradient(
+        180deg,
+        transparent 0 28px,
+        rgba(255,255,255,0.35) 28px 36px
+      );
+      opacity: 0.55;
+      animation: road 0.9s linear infinite;
+    }
+    .arena.stopped .road-lines { animation-play-state: paused; opacity: 0.25; }
+
+    @keyframes road {
+      from { background-position: 0 0; }
+      to { background-position: 0 64px; }
+    }
+
+    .can {
+      position: absolute;
+      width: 54px; height: 62px;
+      margin-left: -27px;
+      border-radius: 12px 12px 10px 10px;
+      background: linear-gradient(180deg, #eef5f0, #d5e4db);
+      border: 3px solid #b7d0c0;
+      color: var(--ink);
+      font-weight: bold;
+      font-size: 1.35rem;
+      display: grid;
+      place-items: center;
+      box-shadow: inset 0 2px 0 rgba(255,255,255,0.5), 0 4px 0 rgba(61,58,52,0.08);
+      z-index: 2;
+    }
+    .can::before {
+      content: "⛽";
+      position: absolute;
+      top: 2px;
+      font-size: 0.7rem;
+      opacity: 0.7;
+    }
+    .can .n { margin-top: 8px; }
+    .can.match {
+      border-color: var(--star);
+      background: linear-gradient(180deg, #fff8e8, #f0e0b8);
+    }
+
+    .car {
+      position: absolute;
+      left: 50%;
+      bottom: 18px;
+      width: 78px;
+      height: 110px;
+      margin-left: -39px;
+      z-index: 3;
+      transform: translateX(0);
+    }
+    .car-body {
+      position: absolute; inset: 18px 8px 10px;
+      background: linear-gradient(180deg, #d99286, var(--car-body) 55%, var(--car-dark));
+      border-radius: 18px 18px 14px 14px;
+      box-shadow: inset 0 2px 0 rgba(255,255,255,0.3), 0 4px 0 rgba(0,0,0,0.12);
+    }
+    .car-roof {
+      position: absolute;
+      top: 8px; left: 16px; right: 16px; height: 42px;
+      background: linear-gradient(180deg, #efe6d4, #e4d7c0);
+      border-radius: 12px;
+      border: 3px solid rgba(61,58,52,0.15);
+      display: grid; place-items: center;
+      font-size: 1.55rem; font-weight: bold; color: var(--ink);
+      box-shadow: inset 0 2px 0 rgba(255,255,255,0.55);
+    }
+    .car-wheel {
+      position: absolute;
+      width: 14px; height: 28px;
+      background: #3d3a34;
+      border-radius: 4px;
+    }
+    .car-wheel.l1 { left: 0; top: 34px; }
+    .car-wheel.r1 { right: 0; top: 34px; }
+    .car-wheel.l2 { left: 0; bottom: 18px; }
+    .car-wheel.r2 { right: 0; bottom: 18px; }
+    .car.glow-good .car-body {
+      box-shadow: 0 0 0 4px rgba(90,125,106,0.35), inset 0 2px 0 rgba(255,255,255,0.3);
+    }
+
+    .controls {
+      display: flex; justify-content: center; gap: 18px;
+    }
+    .move-btn {
+      width: 74px; height: 64px; border: none; border-radius: 16px;
+      font-size: 1.6rem; cursor: pointer; color: var(--ink);
+      background: linear-gradient(180deg, #efe8da, #e4dccb);
+      box-shadow: inset 0 2px 0 rgba(255,255,255,0.5), inset 0 -3px 0 rgba(0,0,0,0.08), 0 4px 0 #d0c6b4;
+      -webkit-user-select: none; user-select: none;
+    }
+    .move-btn:active { transform: translateY(2px); box-shadow: inset 0 2px 0 rgba(255,255,255,0.35), 0 2px 0 #d0c6b4; }
+    .hint-keys {
+      text-align: center; color: var(--muted); font-size: 0.92rem; margin: 0;
+    }
+    .feedback {
+      min-height: 1.3em; text-align: center; font-weight: bold;
+      color: var(--accent); font-size: 1.1rem;
+    }
+
+    .actions { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+    .primary {
+      border: none; background: linear-gradient(180deg, #6f9a82, var(--accent));
+      color: white; min-width: 150px; font: inherit; font-size: 1.4rem; font-weight: bold;
+      border-radius: 14px; position: relative; padding: 24px 20px 16px; cursor: pointer;
+      box-shadow: inset 0 2px 0 rgba(255,255,255,0.28), inset 0 -4px 0 rgba(0,0,0,0.12), 0 5px 0 #4a6b58;
+    }
+    .primary::before {
+      content: "";
+      position: absolute; top: 6px; left: 50%; transform: translateX(-50%);
+      width: 42px; height: 11px;
+      background:
+        radial-gradient(circle at 22% 50%, rgba(255,255,255,0.45) 0 4px, transparent 5px),
+        radial-gradient(circle at 50% 50%, rgba(255,255,255,0.45) 0 4px, transparent 5px),
+        radial-gradient(circle at 78% 50%, rgba(255,255,255,0.45) 0 4px, transparent 5px);
+    }
+    .primary:hover { transform: translateY(-2px); }
+
+    .final-time {
+      font-size: clamp(2.2rem, 8vw, 3rem);
+      font-weight: bold; color: var(--accent);
+      font-variant-numeric: tabular-nums;
+    }
+    .win-stars { color: var(--star); font-size: 2.2rem; letter-spacing: 0.08em; }
+  </style>
+</head>
+<body>
+  <div class="brick-scape" aria-hidden="true">
+    <div class="float-brick b1"></div>
+    <div class="float-brick b2"></div>
+    <div class="float-brick b3"></div>
+    <div class="float-brick b4"></div>
+  </div>
+
+  <div class="playfield">
+  <div class="app">
+    <div class="brick-rail" aria-hidden="true">
+      <span class="mini-brick w3 red"></span>
+      <span class="mini-brick w2 blue"></span>
+      <span class="mini-brick w4 yellow"></span>
+      <span class="mini-brick w2 green"></span>
+      <span class="mini-brick w3 purple"></span>
+      <span class="mini-brick w2 orange"></span>
+    </div>
+
+    <header>
+      <div>
+        <h1>Fuel Run</h1>
+        <p class="subtitle">Catch matching petrol · keep driving</p>
+      </div>
+      <div class="header-tools">
+        <a class="home-btn" href="index.html">Home</a>
+        <button class="sound-btn" id="soundBtn" type="button" aria-pressed="false" aria-label="Mute sound">🔊</button>
+        <div class="scoreboard">
+          <div class="label">Time</div>
+          <div class="value" id="timeValue">0.0s</div>
+        </div>
+      </div>
+    </header>
+
+    <div id="startScreen" class="screen active">
+      <div class="rule-card">
+        <div class="demo-row" aria-hidden="true">
+          <div class="demo-can">3</div>
+          <div>→</div>
+          <div class="demo-car">3</div>
+        </div>
+        <p>
+          Move with ◀ ▶ (or arrow keys).<br />
+          Only the same number fills the tank.<br />
+          When petrol is empty, the car stops.
+        </p>
+      </div>
+      <div class="actions">
+        <button class="primary" id="startBtn" type="button">Go!</button>
+      </div>
+    </div>
+
+    <div id="gameScreen" class="screen">
+      <div class="meta">
+        <div class="target-pill">
+          Catch
+          <span class="num" id="targetNum">1</span>
+        </div>
+        <span class="hint-keys" style="margin:0">Wrong cans are ignored</span>
+      </div>
+      <div class="fuel-wrap">
+        <div class="fuel-label">
+          <span>Petrol</span>
+          <span id="fuelPct">100%</span>
+        </div>
+        <div class="fuel-track" aria-hidden="true">
+          <div class="fuel-bar" id="fuelBar"></div>
+        </div>
+      </div>
+      <div class="arena-card">
+        <div class="arena" id="arena">
+          <div class="road-lines" aria-hidden="true"></div>
+          <div class="car" id="car" aria-label="Race car">
+            <div class="car-wheel l1"></div>
+            <div class="car-wheel r1"></div>
+            <div class="car-wheel l2"></div>
+            <div class="car-wheel r2"></div>
+            <div class="car-body"></div>
+            <div class="car-roof" id="carRoof">1</div>
+          </div>
+        </div>
+      </div>
+      <div class="controls">
+        <button class="move-btn" id="btnLeft" type="button" aria-label="Move left">◀</button>
+        <button class="move-btn" id="btnRight" type="button" aria-label="Move right">▶</button>
+      </div>
+      <p class="hint-keys">Tablet: tap and hold the arrows · Computer: ← → keys</p>
+      <div class="feedback" id="feedback" aria-live="polite"></div>
+    </div>
+
+    <div id="endScreen" class="screen">
+      <h2>Out of petrol!</h2>
+      <div class="win-stars">★★★</div>
+      <div class="final-time" id="finalTime">0.0s</div>
+      <p id="endMessage">Nice run!</p>
+      <div class="actions">
+        <button class="primary" id="playAgainBtn" type="button">Play again</button>
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <script>
+    const LANES = 5;
+    const DRAIN_PER_SEC = 4.2;   // empty in ~24s with no pickups
+    const FILL_AMOUNT = 18;      // % added per matching can
+    const FALL_MS = 3400;
+    const SPAWN_MS = 950;
+
+    const state = {
+      playing: false,
+      target: 1,
+      fuel: 100,
+      timeMs: 0,
+      carX: 50,
+      keys: { left: false, right: false },
+      falling: [],
+      laneCooldown: [],
+      soundOn: true,
+      spawnId: null,
+      rafId: null,
+      lastTs: 0,
+      fills: 0,
+    };
+
+    const els = {
+      startScreen: document.getElementById("startScreen"),
+      gameScreen: document.getElementById("gameScreen"),
+      endScreen: document.getElementById("endScreen"),
+      startBtn: document.getElementById("startBtn"),
+      playAgainBtn: document.getElementById("playAgainBtn"),
+      soundBtn: document.getElementById("soundBtn"),
+      timeValue: document.getElementById("timeValue"),
+      targetNum: document.getElementById("targetNum"),
+      fuelPct: document.getElementById("fuelPct"),
+      fuelBar: document.getElementById("fuelBar"),
+      arena: document.getElementById("arena"),
+      car: document.getElementById("car"),
+      carRoof: document.getElementById("carRoof"),
+      btnLeft: document.getElementById("btnLeft"),
+      btnRight: document.getElementById("btnRight"),
+      feedback: document.getElementById("feedback"),
+      finalTime: document.getElementById("finalTime"),
+      endMessage: document.getElementById("endMessage"),
+    };
+
+    const audio = {
+      ctx: null,
+      unlock() {
+        if (!this.ctx) {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          if (!AC) return;
+          this.ctx = new AC();
+        }
+        if (this.ctx.state === "suspended") this.ctx.resume();
+      },
+      setMuted(on) {
+        state.soundOn = !on;
+        els.soundBtn.textContent = state.soundOn ? "🔊" : "🔇";
+        els.soundBtn.setAttribute("aria-pressed", state.soundOn ? "false" : "true");
+      },
+      tone(freq, dur, type = "sine", gain = 0.04) {
+        if (!state.soundOn || !this.ctx) return;
+        const t0 = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        g.gain.setValueAtTime(gain, t0);
+        g.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+        osc.connect(g);
+        g.connect(this.ctx.destination);
+        osc.start(t0);
+        osc.stop(t0 + dur);
+      },
+      fill() { this.tone(520, 0.08); setTimeout(() => this.tone(700, 0.12), 60); },
+      done() {
+        this.tone(400, 0.12, "triangle", 0.03);
+        setTimeout(() => this.tone(300, 0.16, "triangle", 0.03), 100);
+      },
+    };
+
+    function randInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function formatTime(ms) {
+      return `${(ms / 1000).toFixed(1)}s`;
+    }
+
+    function showScreen(name) {
+      els.startScreen.classList.toggle("active", name === "start");
+      els.gameScreen.classList.toggle("active", name === "game");
+      els.endScreen.classList.toggle("active", name === "end");
+    }
+
+    function laneCenterPct(lane) {
+      return ((lane + 0.5) / LANES) * 100;
+    }
+
+    function setCarX(pct) {
+      state.carX = Math.max(10, Math.min(90, pct));
+      els.car.style.left = `${state.carX}%`;
+    }
+
+    function updateFuelUi() {
+      const pct = Math.max(0, Math.min(100, state.fuel));
+      els.fuelBar.style.width = `${pct}%`;
+      els.fuelPct.textContent = `${Math.round(pct)}%`;
+      els.fuelBar.classList.toggle("low", pct <= 25);
+    }
+
+    function updateTimeUi() {
+      els.timeValue.textContent = formatTime(state.timeMs);
+    }
+
+    function clearFalling() {
+      state.falling.forEach((f) => f.el.remove());
+      state.falling = [];
+      state.laneCooldown = Array(LANES).fill(0);
+    }
+
+    function stopLoops() {
+      if (state.spawnId) { clearInterval(state.spawnId); state.spawnId = null; }
+      if (state.rafId) { cancelAnimationFrame(state.rafId); state.rafId = null; }
+    }
+
+    function pickCanValue() {
+      if (Math.random() < 0.38) return state.target;
+      let n = randInt(1, 5);
+      let g = 0;
+      while (n === state.target && g < 10) { n = randInt(1, 5); g++; }
+      return n;
+    }
+
+    function spawnCan() {
+      if (!state.playing) return;
+      const now = performance.now();
+      const free = [];
+      for (let i = 0; i < LANES; i++) {
+        if (state.laneCooldown[i] <= now) free.push(i);
+      }
+      if (!free.length) return;
+
+      const lane = free[randInt(0, free.length - 1)];
+      const value = pickCanValue();
+      const el = document.createElement("div");
+      el.className = "can" + (value === state.target ? " match" : "");
+      el.innerHTML = `<span class="n">${value}</span>`;
+      el.style.left = `${laneCenterPct(lane)}%`;
+      el.style.top = "-70px";
+
+      state.laneCooldown[lane] = now + FALL_MS * 0.55;
+      els.arena.appendChild(el);
+      state.falling.push({
+        el,
+        value,
+        lane,
+        y: -70,
+        speed: (els.arena.clientHeight + 140) / FALL_MS,
+        alive: true,
+      });
+    }
+
+    function collides(f) {
+      const arenaH = els.arena.clientHeight;
+      const arenaW = els.arena.clientWidth;
+      const carTop = arenaH - 18 - 110;
+      const carBottom = arenaH - 18;
+      const carLeft = (state.carX / 100) * arenaW - 39;
+      const carRight = carLeft + 78;
+
+      const canTop = f.y;
+      const canBottom = f.y + 62;
+      const canLeft = (laneCenterPct(f.lane) / 100) * arenaW - 27;
+      const canRight = canLeft + 54;
+
+      const overlapY = canBottom > carTop + 10 && canTop < carBottom - 8;
+      const overlapX = canRight > carLeft + 10 && canLeft < carRight - 10;
+      return overlapX && overlapY;
+    }
+
+    function onFill() {
+      state.fuel = Math.min(100, state.fuel + FILL_AMOUNT);
+      state.fills += 1;
+      updateFuelUi();
+      els.feedback.textContent = "Fuel up!";
+      audio.fill();
+      els.car.classList.remove("glow-good");
+      void els.car.offsetWidth;
+      els.car.classList.add("glow-good");
+      setTimeout(() => els.car.classList.remove("glow-good"), 220);
+    }
+
+    function endRun() {
+      state.playing = false;
+      stopLoops();
+      els.arena.classList.add("stopped");
+      audio.done();
+      els.finalTime.textContent = formatTime(state.timeMs);
+      const secs = state.timeMs / 1000;
+      if (secs >= 40) els.endMessage.textContent = `Amazing drive! ${state.fills} fills.`;
+      else if (secs >= 25) els.endMessage.textContent = `Great run! ${state.fills} fills.`;
+      else els.endMessage.textContent = `Nice try! ${state.fills} fills.`;
+      showScreen("end");
+    }
+
+    function gameLoop(ts) {
+      if (!state.playing) return;
+      if (!state.lastTs) state.lastTs = ts;
+      const dt = Math.min(32, ts - state.lastTs);
+      state.lastTs = ts;
+
+      state.timeMs += dt;
+      updateTimeUi();
+
+      state.fuel -= (DRAIN_PER_SEC * dt) / 1000;
+      if (state.fuel <= 0) {
+        state.fuel = 0;
+        updateFuelUi();
+        endRun();
+        return;
+      }
+      updateFuelUi();
+
+      const move = 0.09 * dt;
+      if (state.keys.left) setCarX(state.carX - move);
+      if (state.keys.right) setCarX(state.carX + move);
+
+      const arenaH = els.arena.clientHeight;
+      for (const f of state.falling) {
+        if (!f.alive) continue;
+        f.y += f.speed * dt;
+        f.el.style.top = `${f.y}px`;
+
+        if (collides(f)) {
+          // Matching cans fill; others are ignored (fall continues / removed quietly)
+          if (f.value === state.target) {
+            f.alive = false;
+            f.el.remove();
+            onFill();
+          }
+          continue;
+        }
+        if (f.y > arenaH + 30) {
+          f.alive = false;
+          f.el.remove();
+        }
+      }
+      state.falling = state.falling.filter((f) => f.alive);
+
+      state.rafId = requestAnimationFrame(gameLoop);
+    }
+
+    function startGame() {
+      audio.unlock();
+      stopLoops();
+      clearFalling();
+
+      state.target = randInt(1, 5);
+      state.fuel = 100;
+      state.timeMs = 0;
+      state.fills = 0;
+      state.playing = true;
+      state.lastTs = 0;
+      state.keys.left = false;
+      state.keys.right = false;
+
+      els.carRoof.textContent = String(state.target);
+      els.targetNum.textContent = String(state.target);
+      els.feedback.textContent = "";
+      els.arena.classList.remove("stopped");
+      setCarX(50);
+      updateFuelUi();
+      updateTimeUi();
+      showScreen("game");
+
+      state.spawnId = setInterval(spawnCan, SPAWN_MS);
+      spawnCan();
+      state.rafId = requestAnimationFrame(gameLoop);
+    }
+
+    function bindHold(btn, key) {
+      const down = (e) => {
+        e.preventDefault();
+        state.keys[key] = true;
+        audio.unlock();
+      };
+      const up = (e) => {
+        e.preventDefault();
+        state.keys[key] = false;
+      };
+      btn.addEventListener("pointerdown", down);
+      btn.addEventListener("pointerup", up);
+      btn.addEventListener("pointerleave", up);
+      btn.addEventListener("pointercancel", up);
+    }
+
+    bindHold(els.btnLeft, "left");
+    bindHold(els.btnRight, "right");
+
+    window.addEventListener("keydown", (e) => {
+      if (e.key === "ArrowLeft") { state.keys.left = true; e.preventDefault(); }
+      if (e.key === "ArrowRight") { state.keys.right = true; e.preventDefault(); }
+    });
+    window.addEventListener("keyup", (e) => {
+      if (e.key === "ArrowLeft") state.keys.left = false;
+      if (e.key === "ArrowRight") state.keys.right = false;
+    });
+
+    els.startBtn.addEventListener("click", startGame);
+    els.playAgainBtn.addEventListener("click", startGame);
+    els.soundBtn.addEventListener("click", () => {
+      audio.unlock();
+      audio.setMuted(state.soundOn);
+    });
+  </script>
+</body>
+</html>
