@@ -333,6 +333,10 @@
     .car.glow-good .car-body {
       box-shadow: 0 0 0 4px rgba(90,125,106,0.35), inset 0 2px 0 rgba(255,255,255,0.3);
     }
+    .car.glow-bad .car-body {
+      box-shadow: 0 0 0 4px rgba(166,107,94,0.4), inset 0 2px 0 rgba(255,255,255,0.3);
+    }
+    .feedback.wrong { color: var(--fuel-low); }
 
     .controls {
       display: flex; justify-content: center; gap: 18px;
@@ -423,6 +427,7 @@
         <p>
           Move with ◀ ▶ (or arrow keys).<br />
           Only the same number fills the tank.<br />
+          Wrong numbers use petrol up.<br />
           When petrol is empty, the car stops.
         </p>
       </div>
@@ -437,7 +442,7 @@
           Catch
           <span class="num" id="targetNum">1</span>
         </div>
-        <span class="hint-keys" style="margin:0">Wrong cans are ignored</span>
+        <span class="hint-keys" style="margin:0">Wrong cans use up petrol</span>
       </div>
       <div class="fuel-wrap">
         <div class="fuel-label">
@@ -483,10 +488,11 @@
 
   <script>
     const LANES = 5;
-    const DRAIN_PER_SEC = 4.2;   // empty in ~24s with no pickups
-    const FILL_AMOUNT = 18;      // % added per matching can
-    const FALL_MS = 3400;
-    const SPAWN_MS = 950;
+    const DRAIN_PER_SEC = 5.2;   // drains a bit faster
+    const FILL_AMOUNT = 16;      // % added per matching can
+    const WRONG_PENALTY = 12;    // % lost on wrong can
+    const FALL_MS = 2600;        // cans fall faster
+    const SPAWN_MS = 750;        // cans appear more often
 
     const state = {
       playing: false,
@@ -555,6 +561,7 @@
         osc.stop(t0 + dur);
       },
       fill() { this.tone(520, 0.08); setTimeout(() => this.tone(700, 0.12), 60); },
+      wrong() { this.tone(220, 0.14, "square", 0.03); },
       done() {
         this.tone(400, 0.12, "triangle", 0.03);
         setTimeout(() => this.tone(300, 0.16, "triangle", 0.03), 100);
@@ -661,16 +668,31 @@
       return overlapX && overlapY;
     }
 
+    function flashCar(good) {
+      els.car.classList.remove("glow-good", "glow-bad");
+      void els.car.offsetWidth;
+      els.car.classList.add(good ? "glow-good" : "glow-bad");
+      setTimeout(() => els.car.classList.remove("glow-good", "glow-bad"), 220);
+    }
+
     function onFill() {
       state.fuel = Math.min(100, state.fuel + FILL_AMOUNT);
       state.fills += 1;
       updateFuelUi();
       els.feedback.textContent = "Fuel up!";
+      els.feedback.classList.remove("wrong");
       audio.fill();
-      els.car.classList.remove("glow-good");
-      void els.car.offsetWidth;
-      els.car.classList.add("glow-good");
-      setTimeout(() => els.car.classList.remove("glow-good"), 220);
+      flashCar(true);
+    }
+
+    function onWrong() {
+      state.fuel = Math.max(0, state.fuel - WRONG_PENALTY);
+      updateFuelUi();
+      els.feedback.textContent = "Wrong number — petrol lost!";
+      els.feedback.classList.add("wrong");
+      audio.wrong();
+      flashCar(false);
+      if (state.fuel <= 0) endRun();
     }
 
     function endRun() {
@@ -704,7 +726,7 @@
       }
       updateFuelUi();
 
-      const move = 0.09 * dt;
+      const move = 0.11 * dt;
       if (state.keys.left) setCarX(state.carX - move);
       if (state.keys.right) setCarX(state.carX + move);
 
@@ -715,12 +737,11 @@
         f.el.style.top = `${f.y}px`;
 
         if (collides(f)) {
-          // Matching cans fill; others are ignored (fall continues / removed quietly)
-          if (f.value === state.target) {
-            f.alive = false;
-            f.el.remove();
-            onFill();
-          }
+          f.alive = false;
+          f.el.remove();
+          if (f.value === state.target) onFill();
+          else onWrong();
+          if (!state.playing) return;
           continue;
         }
         if (f.y > arenaH + 30) {
