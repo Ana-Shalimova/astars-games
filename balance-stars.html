@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="i18n.js" defer></script>
   <title>Balance Stars</title>
   <style>
     :root {
@@ -747,7 +748,7 @@
     }
   </style>
 </head>
-<body>
+<body data-i18n-title="game.balance.title">
   <div class="brick-scape" aria-hidden="true">
     <div class="float-brick b1"></div>
     <div class="float-brick b2"></div>
@@ -768,14 +769,14 @@
 
     <header>
       <div>
-        <h1>Balance Stars</h1>
-        <p class="subtitle">Make both sides the same</p>
+        <h1 data-i18n="game.balance.title">Balance Stars</h1>
+        <p class="subtitle" data-i18n="balance.sub">Make both sides the same</p>
       </div>
       <div class="header-tools">
-        <a class="home-btn" href="index.html">Home</a>
+        <a class="home-btn" href="index.html" data-i18n="common.home">Home</a>
         <button class="sound-btn" id="soundBtn" type="button" aria-pressed="false" aria-label="Mute sound">🔊</button>
         <div class="scoreboard">
-          <div class="label">Score</div>
+          <div class="label" data-i18n="common.score">Score</div>
           <div class="value"><span id="score">0</span> / <span id="totalScore">10</span></div>
         </div>
       </div>
@@ -786,13 +787,13 @@
     </div>
 
     <div id="startScreen" class="screen active">
-      <h2>Ready to play?</h2>
-      <p>
-        Two levels · 10 rounds<br />
-        First fill both sides · then match a ready side
+      <h2 data-i18n="balance.ready">Ready to play?</h2>
+      <p data-i18n="balance.blurb">
+        Two levels · 10 rounds
+First fill both sides · then match a ready side
       </p>
       <div class="actions">
-        <button class="primary" id="startBtn" type="button">Start</button>
+        <button class="primary" id="startBtn" type="button" data-i18n="common.start">Start</button>
       </div>
     </div>
 
@@ -810,7 +811,7 @@
         <p class="sr-only" id="ruleAria"></p>
       </div>
       <div class="actions">
-        <button class="primary" id="beginBtn" type="button">Go!</button>
+        <button class="primary" id="beginBtn" type="button" data-i18n="common.go">Go!</button>
       </div>
     </div>
 
@@ -880,7 +881,7 @@
       <div class="final-score"><span id="finalScore">0</span> / 10</div>
       <p id="endMessage">Nice balancing!</p>
       <div class="actions">
-        <button class="primary" id="playAgainBtn" type="button">Play again</button>
+        <button class="primary" id="playAgainBtn" type="button" data-i18n="common.playAgain">Play again</button>
       </div>
     </div>
   </div>

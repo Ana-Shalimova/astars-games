@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="i18n.js" defer></script>
   <title>Build a Robot</title>
   <style>
     :root {
@@ -352,7 +353,7 @@
     }
   </style>
 </head>
-<body>
+<body data-i18n-title="game.robot.title">
   <div class="brick-scape" aria-hidden="true">
     <div class="float-brick b1"></div>
     <div class="float-brick b2"></div>
@@ -373,11 +374,11 @@
 
     <header>
       <div>
-        <h1>Build a Robot</h1>
-        <p class="subtitle">Press the button · head, face, torso, arms, legs, feet</p>
+        <h1 data-i18n="game.robot.title">Build a Robot</h1>
+        <p class="subtitle" data-i18n="robot.sub">Press the button · head, face, torso, arms, legs, feet</p>
       </div>
       <div class="header-tools">
-        <a class="home-btn" href="index.html">Home</a>
+        <a class="home-btn" href="index.html" data-i18n="common.home">Home</a>
         <button class="sound-btn" id="soundBtn" type="button" aria-pressed="false" aria-label="Mute sound">🔊</button>
         <div class="scoreboard">
           <div class="label">Part</div>
@@ -393,14 +394,13 @@
     <div id="startScreen" class="screen active">
       <div class="rule-card">
         <div style="font-size:2.4rem;margin-bottom:10px" aria-hidden="true">👆 → 🤖</div>
-        <p class="rule-caption">
+        <p class="rule-caption" data-i18n="robot.rule">
           Press the button six times.<br />
-          The slots flash — then a part joins your robot!<br />
-          <span style="display:inline-block;margin-top:8px">Head → Face → Torso → Arms → Legs → Feet</span>
+          Build your robot part by part!
         </p>
       </div>
       <div class="actions">
-        <button class="primary" id="startBtn" type="button">Go!</button>
+        <button class="primary" id="startBtn" type="button" data-i18n="common.go">Go!</button>
       </div>
     </div>
 
@@ -429,11 +429,11 @@
     </div>
 
     <div id="endScreen" class="screen">
-      <h2>Your robot is ready!</h2>
-      <p class="final-title">★★★ Meet your creation ★★★</p>
+      <h2 data-i18n="robot.ready">Your robot is ready!</h2>
+      <p class="final-title" data-i18n="robot.meet">★★★ Meet your creation ★★★</p>
       <div class="end-robot" id="endRobot"></div>
       <div class="actions">
-        <button class="primary" id="playAgainBtn" type="button">Build again</button>
+        <button class="primary" id="playAgainBtn" type="button" data-i18n="robot.again">Build again</button>
       </div>
     </div>
   </div>

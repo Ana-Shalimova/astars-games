@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="i18n.js" defer></script>
   <title>Pexeso</title>
   <style>
     :root {
@@ -362,7 +363,7 @@
     }
   </style>
 </head>
-<body>
+<body data-i18n-title="game.pexeso.title">
   <div class="brick-scape" aria-hidden="true">
     <div class="float-brick b1"></div>
     <div class="float-brick b2"></div>
@@ -383,14 +384,14 @@
 
     <header>
       <div>
-        <h1>Pexeso</h1>
-        <p class="subtitle">Find the matching faces</p>
+        <h1 data-i18n="game.pexeso.title">Pexeso</h1>
+        <p class="subtitle" data-i18n="pexeso.sub">Find the matching faces</p>
       </div>
       <div class="header-tools">
-        <a class="home-btn" href="index.html">Home</a>
+        <a class="home-btn" href="index.html" data-i18n="common.home">Home</a>
         <button class="sound-btn" id="soundBtn" type="button" aria-pressed="false" aria-label="Mute sound">🔊</button>
         <div class="scoreboard">
-          <div class="label">Stars</div>
+          <div class="label" data-i18n="common.stars">Stars</div>
           <div class="value"><span id="score">0</span> / <span id="totalScore">13</span></div>
         </div>
       </div>
@@ -403,13 +404,13 @@
     <div id="startScreen" class="screen active">
       <div class="rule-card">
         <div class="rule-demo" aria-hidden="true">😀 ⟷ 😀</div>
-        <p>
+        <p data-i18n="pexeso.rule">
           Tap two cards.<br />
           Match the same feeling to earn a star.
         </p>
       </div>
       <div class="actions">
-        <button class="primary" id="startBtn" type="button">Go!</button>
+        <button class="primary" id="startBtn" type="button" data-i18n="common.go">Go!</button>
       </div>
     </div>
 
@@ -426,14 +427,14 @@
         <p id="ruleCaption"></p>
       </div>
       <div class="actions">
-        <button class="primary" id="beginBtn" type="button">Go!</button>
+        <button class="primary" id="beginBtn" type="button" data-i18n="common.go">Go!</button>
       </div>
     </div>
 
     <div id="playScreen" class="screen">
       <div class="meta">
         <span class="level-pill" id="levelLabel">Level 1 · 5 pairs</span>
-        <span class="hint">Tap two matching faces</span>
+        <span class="hint" data-i18n="pexeso.hint">Tap two matching faces</span>
       </div>
       <div class="board-wrap">
         <div class="board cols-5" id="board" aria-label="Pexeso board"></div>
@@ -442,35 +443,41 @@
     </div>
 
     <div id="winScreen" class="screen">
-      <h2>You matched them all!</h2>
+      <h2 data-i18n="pexeso.win">You matched them all!</h2>
       <div class="win-stars" id="winStars">★★★</div>
       <p id="winMessage">Nice memory!</p>
       <div class="actions">
-        <button class="primary" id="againBtn" type="button">Play again</button>
+        <button class="primary" id="againBtn" type="button" data-i18n="common.playAgain">Play again</button>
       </div>
     </div>
   </div>
   </div>
 
   <script>
-    const LEVELS = [
-      {
-        level: 1,
-        pairs: 5,
-        emojis: ["😀", "😢", "😠", "😮", "😍"],
-        label: "Level 1 · 5 pairs",
-        caption: "Five feelings · five pairs to find.",
-      },
-      {
-        level: 2,
-        pairs: 8,
-        emojis: ["😀", "😢", "😠", "😮", "😍", "😎", "😴", "🤢"],
-        label: "Level 2 · 8 pairs",
-        caption: "Eight feelings · a bigger board!",
-      },
-    ];
+    function tr(key, vars) {
+      return window.AstarsI18n ? AstarsI18n.t(key, vars) : key;
+    }
 
-    const TOTAL_STARS = LEVELS.reduce((sum, level) => sum + level.pairs, 0);
+    function getLevels() {
+      return [
+        {
+          level: 1,
+          pairs: 5,
+          emojis: ["😀", "😢", "😠", "😮", "😍"],
+          labelKey: "pexeso.l1",
+          captionKey: "pexeso.l1cap",
+        },
+        {
+          level: 2,
+          pairs: 8,
+          emojis: ["😀", "😢", "😠", "😮", "😍", "😎", "😴", "🤢"],
+          labelKey: "pexeso.l2",
+          captionKey: "pexeso.l2cap",
+        },
+      ];
+    }
+
+    const TOTAL_STARS = getLevels().reduce((sum, level) => sum + level.pairs, 0);
 
     const state = {
       levelIndex: 0,
@@ -569,17 +576,17 @@
 
     function renderIntro(levelIndex) {
       state.levelIndex = levelIndex;
-      const level = LEVELS[levelIndex];
-      els.introLevelText.textContent = `Level ${level.level}`;
+      const level = getLevels()[levelIndex];
+      els.introLevelText.textContent = `${tr(level.labelKey).split("·")[0].trim()}`;
       els.dot1.classList.toggle("on", level.level >= 1);
       els.dot2.classList.toggle("on", level.level >= 2);
       els.ruleDemo.textContent = level.emojis.slice(0, 4).join(" ");
-      els.ruleCaption.textContent = level.caption;
+      els.ruleCaption.textContent = tr(level.captionKey);
       showScreen("intro");
     }
 
     function buildBoard() {
-      const level = LEVELS[state.levelIndex];
+      const level = getLevels()[state.levelIndex];
       const deck = shuffle(
         level.emojis.flatMap((emoji, pairId) => [
           { id: `${pairId}-a`, pairId, emoji },
@@ -592,7 +599,7 @@
       state.matched = 0;
       state.locked = false;
       els.feedback.textContent = "";
-      els.levelLabel.textContent = level.label;
+      els.levelLabel.textContent = tr(level.labelKey);
 
       els.board.className = `board ${level.pairs === 5 ? "cols-5" : "cols-4"}`;
       els.board.replaceChildren();
@@ -646,18 +653,18 @@
         state.matched += 1;
         state.score += 1;
         updateScore();
-        els.feedback.textContent = "Match! ⭐";
+        els.feedback.textContent = tr("pexeso.match");
         state.flipped = [];
         state.locked = false;
 
-        if (state.matched >= LEVELS[state.levelIndex].pairs) {
+        if (state.matched >= getLevels()[state.levelIndex].pairs) {
           setTimeout(onLevelComplete, 550);
         }
       } else {
         audio.miss();
         tileEl(a).classList.add("wrong");
         tileEl(b).classList.add("wrong");
-        els.feedback.textContent = "Try again";
+        els.feedback.textContent = tr("pexeso.try");
         setTimeout(() => {
           tileEl(a).classList.remove("flipped", "wrong");
           tileEl(b).classList.remove("flipped", "wrong");
@@ -671,12 +678,12 @@
     }
 
     function onLevelComplete() {
-      if (state.levelIndex < LEVELS.length - 1) {
+      if (state.levelIndex < getLevels().length - 1) {
         renderIntro(state.levelIndex + 1);
       } else {
         audio.done();
         els.winStars.textContent = "★★★";
-        els.winMessage.textContent = `You found all ${TOTAL_STARS} matching pairs!`;
+        els.winMessage.textContent = tr("pexeso.winMsg", { n: TOTAL_STARS });
         showScreen("win");
       }
     }

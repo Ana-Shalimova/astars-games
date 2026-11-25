@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="i18n.js" defer></script>
   <title>Photo Puzzle</title>
   <style>
     :root {
@@ -400,7 +401,7 @@
     }
   </style>
 </head>
-<body>
+<body data-i18n-title="game.photo.title">
   <div class="brick-scape" aria-hidden="true">
     <div class="float-brick b1"></div>
     <div class="float-brick b2"></div>
@@ -421,11 +422,11 @@
 
     <header>
       <div>
-        <h1>Photo Puzzle</h1>
-        <p class="subtitle">Your picture · your pieces</p>
+        <h1 data-i18n="game.photo.title">Photo Puzzle</h1>
+        <p class="subtitle" data-i18n="photo.sub">Your picture · your pieces</p>
       </div>
       <div class="header-tools">
-        <a class="home-btn" href="index.html">Home</a>
+        <a class="home-btn" href="index.html" data-i18n="common.home">Home</a>
         <button class="sound-btn" id="soundBtn" type="button" aria-pressed="false" aria-label="Mute sound">🔊</button>
         <div class="scoreboard">
           <div class="label">Moves</div>
@@ -437,13 +438,11 @@
     <div id="startScreen" class="screen active">
       <div class="rule-card">
         <div style="font-size:2.4rem;margin-bottom:10px" aria-hidden="true">📷 → 🧩</div>
-        <p>
-          Add a photo, pick how many pieces,<br />
-          then tap two tiles to swap them.
-        </p>
+        <p data-i18n="photo.rule">Add a photo, pick how many pieces,
+then tap two tiles to swap them.</p>
       </div>
       <div class="actions">
-        <button class="primary" id="startBtn" type="button">Go!</button>
+        <button class="primary" id="startBtn" type="button" data-i18n="common.go">Go!</button>
       </div>
     </div>
 
@@ -451,32 +450,32 @@
       <div class="setup-card">
         <div class="upload-zone" id="uploadZone">
           <span class="upload-icon" aria-hidden="true">📷</span>
-          <strong>Tap to add a photo</strong>
-          <span class="hint">or drop an image here</span>
+          <strong data-i18n="photo.upload">Tap to add a photo</strong>
+          <span class="hint" data-i18n="photo.orDrop">or drop an image here</span>
           <input id="fileInput" type="file" accept="image/*" aria-label="Choose a photo" />
         </div>
         <div class="preview-wrap" id="previewWrap">
           <img id="previewImg" alt="Selected photo preview" />
         </div>
 
-        <p style="margin:18px 0 0;font-weight:bold;color:var(--accent)">How many pieces?</p>
+        <p style="margin:18px 0 0;font-weight:bold;color:var(--accent)" data-i18n="photo.pieces">How many pieces?</p>
         <div class="size-row" role="group" aria-label="Puzzle size">
           <button class="size-btn selected" type="button" data-size="2">2 × 2<span class="pieces">4 pieces</span></button>
           <button class="size-btn" type="button" data-size="3">3 × 3<span class="pieces">9 pieces</span></button>
           <button class="size-btn" type="button" data-size="4">4 × 4<span class="pieces">16 pieces</span></button>
         </div>
-        <p class="privacy">Your photo stays on this device — nothing is uploaded.</p>
+        <p class="privacy" data-i18n="photo.privacy">Your photo stays on this device — nothing is uploaded.</p>
       </div>
       <div class="actions">
-        <button class="ghost-btn" id="backBtn" type="button">Back</button>
-        <button class="primary" id="playBtn" type="button" disabled>Play</button>
+        <button class="ghost-btn" id="backBtn" type="button" data-i18n="common.back">Back</button>
+        <button class="primary" id="playBtn" type="button" disabled data-i18n="photo.play">Play</button>
       </div>
     </div>
 
     <div id="playScreen" class="screen">
       <div class="meta">
         <span class="level-pill" id="sizeLabel">3 × 3</span>
-        <span class="hint">Tap one tile, then another to swap</span>
+        <span class="hint" data-i18n="photo.hint">Tap one tile, then another to swap</span>
       </div>
       <div class="board-wrap">
         <div class="board-card">
@@ -485,19 +484,19 @@
       </div>
       <div class="feedback" id="feedback" aria-live="polite"></div>
       <div class="actions">
-        <button class="ghost-btn" id="shuffleBtn" type="button">Shuffle again</button>
-        <button class="ghost-btn" id="newPhotoBtn" type="button">New photo</button>
+        <button class="ghost-btn" id="shuffleBtn" type="button" data-i18n="photo.shuffle">Shuffle again</button>
+        <button class="ghost-btn" id="newPhotoBtn" type="button" data-i18n="photo.newPhoto">New photo</button>
       </div>
     </div>
 
     <div id="winScreen" class="screen">
-      <h2>You did it!</h2>
+      <h2 data-i18n="photo.win">You did it!</h2>
       <div class="win-stars" id="winStars">★★★</div>
       <img class="thumb-done" id="winImg" alt="Completed puzzle" />
-      <p id="winMessage">Nice puzzle solving!</p>
+      <p id="winMessage" data-i18n="photo.winMsg">Nice puzzle solving!</p>
       <div class="actions">
-        <button class="primary" id="againBtn" type="button">Play again</button>
-        <button class="ghost-btn" id="anotherBtn" type="button">Another photo</button>
+        <button class="primary" id="againBtn" type="button" data-i18n="common.playAgain">Play again</button>
+        <button class="ghost-btn" id="anotherBtn" type="button" data-i18n="photo.another">Another photo</button>
       </div>
     </div>
   </div>

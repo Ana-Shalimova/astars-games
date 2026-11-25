@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="i18n.js" defer></script>
   <title>Fuel Run</title>
   <style>
     :root {
@@ -383,7 +384,7 @@
     .win-stars { color: var(--star); font-size: 2.2rem; letter-spacing: 0.08em; }
   </style>
 </head>
-<body>
+<body data-i18n-title="game.fuel.title">
   <div class="brick-scape" aria-hidden="true">
     <div class="float-brick b1"></div>
     <div class="float-brick b2"></div>
@@ -404,14 +405,14 @@
 
     <header>
       <div>
-        <h1>Fuel Run</h1>
-        <p class="subtitle">Catch matching petrol · keep driving</p>
+        <h1 data-i18n="game.fuel.title">Fuel Run</h1>
+        <p class="subtitle" data-i18n="fuel.sub">Catch matching petrol · keep driving</p>
       </div>
       <div class="header-tools">
-        <a class="home-btn" href="index.html">Home</a>
+        <a class="home-btn" href="index.html" data-i18n="common.home">Home</a>
         <button class="sound-btn" id="soundBtn" type="button" aria-pressed="false" aria-label="Mute sound">🔊</button>
         <div class="scoreboard">
-          <div class="label">Time</div>
+          <div class="label" data-i18n="common.time">Time</div>
           <div class="value" id="timeValue">0.0s</div>
         </div>
       </div>
@@ -424,7 +425,7 @@
           <div>→</div>
           <div class="demo-car">3</div>
         </div>
-        <p>
+        <p data-i18n="fuel.rule">
           Move with ◀ ▶ (or arrow keys).<br />
           Only the same number fills the tank.<br />
           Wrong numbers use petrol up.<br />
@@ -432,21 +433,21 @@
         </p>
       </div>
       <div class="actions">
-        <button class="primary" id="startBtn" type="button">Go!</button>
+        <button class="primary" id="startBtn" type="button" data-i18n="common.go">Go!</button>
       </div>
     </div>
 
     <div id="gameScreen" class="screen">
       <div class="meta">
         <div class="target-pill">
-          Catch
+          <span data-i18n="fuel.catch">Catch</span>
           <span class="num" id="targetNum">1</span>
         </div>
-        <span class="hint-keys" style="margin:0">Wrong cans use up petrol</span>
+        <span class="hint-keys" style="margin:0" data-i18n="fuel.wrongHint">Wrong cans use up petrol</span>
       </div>
       <div class="fuel-wrap">
         <div class="fuel-label">
-          <span>Petrol</span>
+          <span data-i18n="fuel.petrol">Petrol</span>
           <span id="fuelPct">100%</span>
         </div>
         <div class="fuel-track" aria-hidden="true">
@@ -470,17 +471,17 @@
         <button class="move-btn" id="btnLeft" type="button" aria-label="Move left">◀</button>
         <button class="move-btn" id="btnRight" type="button" aria-label="Move right">▶</button>
       </div>
-      <p class="hint-keys">Tablet: tap and hold the arrows · Computer: ← → keys</p>
+      <p class="hint-keys" data-i18n="fuel.hint">Tablet: tap and hold the arrows · Computer: ← → keys</p>
       <div class="feedback" id="feedback" aria-live="polite"></div>
     </div>
 
     <div id="endScreen" class="screen">
-      <h2>Out of petrol!</h2>
+      <h2 data-i18n="fuel.out">Out of petrol!</h2>
       <div class="win-stars">★★★</div>
       <div class="final-time" id="finalTime">0.0s</div>
       <p id="endMessage">Nice run!</p>
       <div class="actions">
-        <button class="primary" id="playAgainBtn" type="button">Play again</button>
+        <button class="primary" id="playAgainBtn" type="button" data-i18n="common.playAgain">Play again</button>
       </div>
     </div>
   </div>
@@ -675,11 +676,15 @@
       setTimeout(() => els.car.classList.remove("glow-good", "glow-bad"), 220);
     }
 
+    function tr(key, vars) {
+      return window.AstarsI18n ? AstarsI18n.t(key, vars) : key;
+    }
+
     function onFill() {
       state.fuel = Math.min(100, state.fuel + FILL_AMOUNT);
       state.fills += 1;
       updateFuelUi();
-      els.feedback.textContent = "Fuel up!";
+      els.feedback.textContent = tr("fuel.up");
       els.feedback.classList.remove("wrong");
       audio.fill();
       flashCar(true);
@@ -688,7 +693,7 @@
     function onWrong() {
       state.fuel = Math.max(0, state.fuel - WRONG_PENALTY);
       updateFuelUi();
-      els.feedback.textContent = "Wrong number — petrol lost!";
+      els.feedback.textContent = tr("fuel.wrong");
       els.feedback.classList.add("wrong");
       audio.wrong();
       flashCar(false);
@@ -702,9 +707,8 @@
       audio.done();
       els.finalTime.textContent = formatTime(state.timeMs);
       const secs = state.timeMs / 1000;
-      if (secs >= 40) els.endMessage.textContent = `Amazing drive! ${state.fills} fills.`;
-      else if (secs >= 25) els.endMessage.textContent = `Great run! ${state.fills} fills.`;
-      else els.endMessage.textContent = `Nice try! ${state.fills} fills.`;
+      const key = secs >= 40 ? "fuel.amazing" : secs >= 25 ? "fuel.great" : "fuel.nice";
+      els.endMessage.textContent = tr(key, { n: state.fills });
       showScreen("end");
     }
 

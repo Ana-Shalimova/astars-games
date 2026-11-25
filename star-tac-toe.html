@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="i18n.js" defer></script>
   <title>Star Tac Toe</title>
   <style>
     :root {
@@ -314,7 +315,7 @@
     .win-stars.draw { color: var(--muted); }
   </style>
 </head>
-<body>
+<body data-i18n-title="game.ttt.title">
   <div class="brick-scape" aria-hidden="true">
     <div class="float-brick b1"></div>
     <div class="float-brick b2"></div>
@@ -335,14 +336,14 @@
 
     <header>
       <div>
-        <h1>Star Tac Toe</h1>
-        <p class="subtitle">Three stars in a row</p>
+        <h1 data-i18n="game.ttt.title">Star Tac Toe</h1>
+        <p class="subtitle" data-i18n="ttt.sub">Three stars in a row</p>
       </div>
       <div class="header-tools">
-        <a class="home-btn" href="index.html">Home</a>
+        <a class="home-btn" href="index.html" data-i18n="common.home">Home</a>
         <button class="sound-btn" id="soundBtn" type="button" aria-pressed="false" aria-label="Mute sound">🔊</button>
         <div class="scoreboard">
-          <div class="label">Wins</div>
+          <div class="label" data-i18n="common.wins">Wins</div>
           <div class="value">
             <span class="score-gold" id="goldWins">★ 0</span>
             <span class="score-blue" id="blueWins">★ 0</span>
@@ -358,23 +359,23 @@
           <span class="vs">vs</span>
           <span class="blue">★</span>
         </div>
-        <p>
+        <p data-i18n="ttt.rule">
           Get three stars in a row.<br />
           Gold and blue take turns.
         </p>
       </div>
       <div class="mode-card">
-        <p style="margin:0 0 4px;font-weight:bold;color:var(--accent)">How do you want to play?</p>
+        <p style="margin:0 0 4px;font-weight:bold;color:var(--accent)" data-i18n="ttt.how">How do you want to play?</p>
         <div class="mode-row">
           <button class="mode-btn" id="twoPlayerBtn" type="button">
             <span class="mode-icon" aria-hidden="true">👥</span>
-            2 players
-            <span class="mode-sub">Same tablet</span>
+            <span data-i18n="ttt.two">2 players</span>
+            <span class="mode-sub" data-i18n="ttt.twoSub">Same tablet</span>
           </button>
           <button class="mode-btn" id="computerBtn" type="button">
             <span class="mode-icon" aria-hidden="true">🤖</span>
-            Computer
-            <span class="mode-sub">You are gold ★</span>
+            <span data-i18n="ttt.cpu">Computer</span>
+            <span class="mode-sub" data-i18n="ttt.cpuSub">You are gold ★</span>
           </button>
         </div>
       </div>
@@ -391,8 +392,8 @@
       <div class="board" id="board" aria-label="Star Tac Toe board"></div>
       <div class="feedback" id="feedback" aria-live="polite"></div>
       <div class="actions">
-        <button class="ghost-btn" id="restartBtn" type="button">New round</button>
-        <button class="ghost-btn" id="changeModeBtn" type="button">Change mode</button>
+        <button class="ghost-btn" id="restartBtn" type="button" data-i18n="ttt.newRound">New round</button>
+        <button class="ghost-btn" id="changeModeBtn" type="button" data-i18n="ttt.changeMode">Change mode</button>
       </div>
     </div>
 
@@ -401,8 +402,8 @@
       <div class="win-stars gold" id="winStars">★★★</div>
       <p id="winMessage">Three in a row!</p>
       <div class="actions">
-        <button class="primary" id="againBtn" type="button">Play again</button>
-        <button class="ghost-btn" id="winModeBtn" type="button">Change mode</button>
+        <button class="primary" id="againBtn" type="button" data-i18n="common.playAgain">Play again</button>
+        <button class="ghost-btn" id="winModeBtn" type="button" data-i18n="ttt.changeMode">Change mode</button>
       </div>
     </div>
   </div>
@@ -499,10 +500,14 @@
       els.blueWins.textContent = `★ ${state.wins.blue}`;
     }
 
+    function tr(key, vars) {
+      return window.AstarsI18n ? AstarsI18n.t(key, vars) : key;
+    }
+
     function updateTurn() {
-      const label = state.turn === GOLD ? "Gold’s turn" : "Blue’s turn";
-      els.turnText.textContent =
-        state.mode === "computer" && state.turn === BLUE ? "Computer’s turn" : label;
+      let key = state.turn === GOLD ? "ttt.goldTurn" : "ttt.blueTurn";
+      if (state.mode === "computer" && state.turn === BLUE) key = "ttt.cpuTurn";
+      els.turnText.textContent = tr(key);
       els.turnPill.className = `turn-pill ${state.turn}`;
     }
 
@@ -546,7 +551,7 @@
       state.locked = false;
       state.over = false;
       els.feedback.textContent = "";
-      els.modeTag.textContent = state.mode === "two" ? "2 players" : "vs computer";
+      els.modeTag.textContent = tr(state.mode === "two" ? "ttt.modeTwo" : "ttt.modeCpu");
       updateTurn();
       renderBoard();
       showScreen("play");
@@ -565,24 +570,23 @@
 
       if (result.player === "draw") {
         audio.draw();
-        els.winTitle.textContent = "It’s a draw!";
+        els.winTitle.textContent = tr("ttt.draw");
         els.winStars.className = "win-stars draw";
         els.winStars.textContent = "★★★";
-        els.winMessage.textContent = "No three in a row — try again.";
-        els.feedback.textContent = "Draw";
+        els.winMessage.textContent = tr("ttt.drawMsg");
+        els.feedback.textContent = tr("ttt.draw");
       } else {
         audio.win();
         highlightWin(result.line);
         state.wins[result.player] += 1;
         updateWins();
-        const name = result.player === GOLD ? "Gold" : "Blue";
-        const vsComputerWin =
-          state.mode === "computer" && result.player === BLUE ? "Computer" : name;
-        els.winTitle.textContent = `${vsComputerWin} wins!`;
+        let titleKey = result.player === GOLD ? "ttt.goldWins" : "ttt.blueWins";
+        if (state.mode === "computer" && result.player === BLUE) titleKey = "ttt.cpuWins";
+        els.winTitle.textContent = tr(titleKey);
         els.winStars.className = `win-stars ${result.player}`;
         els.winStars.textContent = "★★★";
-        els.winMessage.textContent = "Three stars in a row!";
-        els.feedback.textContent = `${vsComputerWin} wins!`;
+        els.winMessage.textContent = tr("ttt.winMsg");
+        els.feedback.textContent = tr(titleKey);
       }
 
       setTimeout(() => showScreen("win"), 650);
@@ -676,6 +680,12 @@
     });
 
     updateWins();
+    document.addEventListener("astars:lang", () => {
+      if (!state.over) updateTurn();
+      if (els.modeTag) {
+        els.modeTag.textContent = tr(state.mode === "two" ? "ttt.modeTwo" : "ttt.modeCpu");
+      }
+    });
   </script>
 </body>
 </html>

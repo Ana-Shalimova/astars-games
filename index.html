@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Astars</title>
+  <script src="i18n.js" defer></script>
   <meta name="description" content="Astars — a space we create, store and play simple kids’ games. Free, for ages 5–7." />
   <link rel="icon" href="astars-logo.png" type="image/png" />
   <style>
@@ -286,7 +287,7 @@
     }
   </style>
 </head>
-<body>
+<body data-i18n-title="doc.home">
   <div class="brick-frame" aria-hidden="true">
     <div class="frame-edge frame-top" id="frameTop"></div>
     <div class="frame-edge frame-right" id="frameRight"></div>
@@ -298,10 +299,10 @@
     <img class="site-logo" src="astars-logo.png" alt="Astars" width="220" height="156" />
     <div class="header-copy">
       <p class="header-welcome">
-        Welcome to Astars — a space we create, store and play our simple kids’ games.
-        <span>(recommended age 5–7 years)</span>
+        <span data-i18n="home.welcome">Welcome to Astars — a space we create, store and play our simple kids’ games.</span>
+        <span data-i18n="home.age">(recommended age 5–7 years)</span>
       </p>
-      <p class="header-free">Enjoy them for free, no subscription required — only fun!</p>
+      <p class="header-free" data-i18n="home.free">Enjoy them for free, no subscription required — only fun!</p>
     </div>
   </header>
 
@@ -310,78 +311,78 @@
       <a class="game" href="maths-game.html">
         <span class="game-icon" aria-hidden="true">⭐</span>
         <div class="game-body">
-          <span class="game-kicker">Numbers</span>
-          <h2>Maths Stars</h2>
-          <p>Add and subtract with numbers 1–10 — tap or type the answer.</p>
+          <span class="game-kicker" data-i18n="game.maths.kicker">Numbers</span>
+          <h2 data-i18n="game.maths.title">Maths Stars</h2>
+          <p data-i18n="game.maths.desc">Add and subtract with numbers 1–10 — tap or type the answer.</p>
         </div>
       </a>
       <a class="game" href="more-or-less-stars.html">
         <span class="game-icon" aria-hidden="true">🔢</span>
         <div class="game-body">
-          <span class="game-kicker">Compare</span>
-          <h2>More or Less</h2>
-          <p>Spot which side has more — or less.</p>
+          <span class="game-kicker" data-i18n="game.more.kicker">Compare</span>
+          <h2 data-i18n="game.more.title">More or Less</h2>
+          <p data-i18n="game.more.desc">Spot which side has more — or less.</p>
         </div>
       </a>
       <a class="game" href="balance-stars.html">
         <span class="game-icon" aria-hidden="true">⚖️</span>
         <div class="game-body">
-          <span class="game-kicker">Balance</span>
-          <h2>Balance Stars</h2>
-          <p>Stack the tray so both sides match.</p>
+          <span class="game-kicker" data-i18n="game.balance.kicker">Balance</span>
+          <h2 data-i18n="game.balance.title">Balance Stars</h2>
+          <p data-i18n="game.balance.desc">Stack the tray so both sides match.</p>
         </div>
       </a>
       <a class="game" href="spin-a-robot.html">
         <span class="game-icon" aria-hidden="true">🤖</span>
         <div class="game-body">
-          <span class="game-kicker">Create</span>
-          <h2>Build a Robot</h2>
-          <p>Mix parts, press, and watch your robot dance.</p>
+          <span class="game-kicker" data-i18n="game.robot.kicker">Create</span>
+          <h2 data-i18n="game.robot.title">Build a Robot</h2>
+          <p data-i18n="game.robot.desc">Mix parts, press, and watch your robot dance.</p>
         </div>
       </a>
       <a class="game" href="star-tac-toe.html">
         <span class="game-icon" aria-hidden="true">★</span>
         <div class="game-body">
-          <span class="game-kicker">Logic</span>
-          <h2>Star Tac Toe</h2>
-          <p>Three stars in a row — 2 players or vs computer.</p>
+          <span class="game-kicker" data-i18n="game.ttt.kicker">Logic</span>
+          <h2 data-i18n="game.ttt.title">Star Tac Toe</h2>
+          <p data-i18n="game.ttt.desc">Three stars in a row — 2 players or vs computer.</p>
         </div>
       </a>
       <a class="game" href="pexeso.html">
         <span class="game-icon" aria-hidden="true">😀</span>
         <div class="game-body">
-          <span class="game-kicker">Memory</span>
-          <h2>Pexeso</h2>
-          <p>Find matching faces — 5 pairs, then 8.</p>
+          <span class="game-kicker" data-i18n="game.pexeso.kicker">Memory</span>
+          <h2 data-i18n="game.pexeso.title">Pexeso</h2>
+          <p data-i18n="game.pexeso.desc">Find matching faces — 5 pairs, then 8.</p>
         </div>
       </a>
       <a class="game" href="photo-puzzle.html">
         <span class="game-icon" aria-hidden="true">🧩</span>
         <div class="game-body">
-          <span class="game-kicker">Puzzle</span>
-          <h2>Photo Puzzle</h2>
-          <p>Turn a photo into a sliding puzzle.</p>
+          <span class="game-kicker" data-i18n="game.photo.kicker">Puzzle</span>
+          <h2 data-i18n="game.photo.title">Photo Puzzle</h2>
+          <p data-i18n="game.photo.desc">Turn a photo into a sliding puzzle.</p>
         </div>
       </a>
       <a class="game" href="find-the-number.html">
         <span class="game-icon" aria-hidden="true">🎯</span>
         <div class="game-body">
-          <span class="game-kicker">Catch</span>
-          <h2>Find the Number</h2>
-          <p>Catch the right number before time runs out.</p>
+          <span class="game-kicker" data-i18n="game.find.kicker">Catch</span>
+          <h2 data-i18n="game.find.title">Find the Number</h2>
+          <p data-i18n="game.find.desc">Catch the right number before time runs out.</p>
         </div>
       </a>
       <a class="game" href="fuel-run.html">
         <span class="game-icon" aria-hidden="true">🏎️</span>
         <div class="game-body">
-          <span class="game-kicker">Drive</span>
-          <h2>Fuel Run</h2>
-          <p>Catch matching petrol cans and keep the car going.</p>
+          <span class="game-kicker" data-i18n="game.fuel.kicker">Drive</span>
+          <h2 data-i18n="game.fuel.title">Fuel Run</h2>
+          <p data-i18n="game.fuel.desc">Catch matching petrol cans and keep the car going.</p>
         </div>
       </a>
     </section>
 
-    <p class="foot">Made for joy and fun</p>
+    <p class="foot" data-i18n="home.foot">Made for joy and fun</p>
   </main>
 
   <script>

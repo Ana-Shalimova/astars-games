@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="i18n.js" defer></script>
   <title>Maths Stars</title>
   <style>
     :root {
@@ -833,7 +834,7 @@
     }
   </style>
 </head>
-<body>
+<body data-i18n-title="game.maths.title">
   <div class="brick-scape" aria-hidden="true">
     <div class="float-brick b1"></div>
     <div class="float-brick b2"></div>
@@ -858,11 +859,11 @@
 
     <header>
       <div class="header-left">
-        <h1>Maths Stars</h1>
-        <p class="subtitle">Add &amp; subtract · numbers 1–10</p>
+        <h1 data-i18n="game.maths.title">Maths Stars</h1>
+        <p class="subtitle" data-i18n="maths.sub">Add &amp; subtract · numbers 1–10</p>
       </div>
       <div class="header-tools">
-        <a class="home-btn" href="index.html">Home</a>
+        <a class="home-btn" href="index.html" data-i18n="common.home">Home</a>
         <button
           class="sound-btn"
           id="soundBtn"
@@ -872,7 +873,7 @@
           title="Sound on/off"
         >🔊</button>
         <div class="scoreboard">
-          <div class="label">Score</div>
+          <div class="label" data-i18n="common.score">Score</div>
           <div class="value"><span id="score">0</span> / <span id="totalScore">20</span></div>
         </div>
       </div>
@@ -883,13 +884,13 @@
     </div>
 
     <div id="startScreen" class="screen active">
-      <h2>Ready to play?</h2>
-      <p>
-        Two levels · 20 questions<br />
-        First tap the answer · then type it
+      <h2 data-i18n="maths.ready">Ready to play?</h2>
+      <p data-i18n="maths.blurb">
+        Two levels · 20 questions
+Tap or type answers 1–10
       </p>
       <div class="actions">
-        <button class="primary" id="startBtn" type="button">Start</button>
+        <button class="primary" id="startBtn" type="button" data-i18n="common.start">Start</button>
       </div>
     </div>
 
@@ -909,7 +910,7 @@
       </div>
 
       <div class="actions">
-        <button class="primary" id="beginLevelBtn" type="button">Go!</button>
+        <button class="primary" id="beginLevelBtn" type="button" data-i18n="common.go">Go!</button>
       </div>
     </div>
 
@@ -956,7 +957,7 @@
       <div class="final-score"><span id="finalScore">0</span> / <span id="finalTotal">20</span></div>
       <p id="endMessage">You did great practising maths today.</p>
       <div class="actions">
-        <button class="primary" id="playAgainBtn" type="button">Play again</button>
+        <button class="primary" id="playAgainBtn" type="button" data-i18n="common.playAgain">Play again</button>
       </div>
     </div>
   </div>
