@@ -453,16 +453,12 @@
 
   <script>
     (function () {
-      // Paste your Google Form link here after you create it:
-      const FEEDBACK_FORM_URL = "";
+      const FEEDBACK_FORM_URL = "https://forms.gle/Mdq1mjy4AvJE92PY8";
 
       const feedbackBtn = document.getElementById("feedbackBtn");
-      if (FEEDBACK_FORM_URL) {
-        feedbackBtn.href = FEEDBACK_FORM_URL;
-      } else {
-        feedbackBtn.classList.add("is-disabled");
-        feedbackBtn.setAttribute("aria-disabled", "true");
-      }
+      feedbackBtn.href = FEEDBACK_FORM_URL;
+      feedbackBtn.classList.remove("is-disabled");
+      feedbackBtn.removeAttribute("aria-disabled");
 
       const COLORS = ["red", "blue", "yellow", "green", "purple", "orange"];
       const TARGET = 72; // aim for roughly brick-sized segments
