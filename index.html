@@ -330,29 +330,6 @@
       pointer-events: none;
     }
 
-    .qr-slot {
-      margin: 12px auto 0;
-      width: min(168px, 46vw);
-      aspect-ratio: 1;
-      border-radius: 16px;
-      border: 2px dashed rgba(61, 58, 52, 0.18);
-      background: rgba(255, 252, 247, 0.75);
-      display: grid;
-      place-items: center;
-      color: var(--muted);
-      font-size: 0.85rem;
-      padding: 10px;
-      line-height: 1.3;
-      overflow: hidden;
-    }
-
-    .qr-slot img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      border-radius: 10px;
-    }
-
     .foot {
       margin: 4px 0 0;
       text-align: center;
@@ -456,7 +433,7 @@
       </a>
     </section>
 
-    <section class="bottom" aria-label="Feedback and support">
+    <section class="bottom" aria-label="Feedback">
       <div class="bottom-block">
         <h2 data-i18n="home.feedbackTitle">Tell us what you think</h2>
         <p data-i18n="home.feedbackText">A short note or rating helps us fix bugs and make better games.</p>
@@ -470,16 +447,6 @@
         >Send feedback</a>
       </div>
 
-      <div class="bottom-block">
-        <h2 data-i18n="home.tipTitle">Optional support</h2>
-        <p data-i18n="home.tipText">
-          Games stay free. If you liked them and want to help buy coffee or toys, you can leave a tiny tip — even 1 Kč means a lot.
-        </p>
-        <div class="qr-slot" id="tipQr">
-          <span data-i18n="home.tipQrSoon">QR coming soon</span>
-        </div>
-      </div>
-
       <p class="foot" data-i18n="home.foot">Made for joy and fun</p>
     </section>
   </main>
@@ -488,7 +455,6 @@
     (function () {
       // Paste your Google Form link here after you create it:
       const FEEDBACK_FORM_URL = "";
-      // Optional: save your bank QR as tip-qr.png in this folder
 
       const feedbackBtn = document.getElementById("feedbackBtn");
       if (FEEDBACK_FORM_URL) {
@@ -497,14 +463,6 @@
         feedbackBtn.classList.add("is-disabled");
         feedbackBtn.setAttribute("aria-disabled", "true");
       }
-
-      const tipQr = document.getElementById("tipQr");
-      const qrImg = new Image();
-      qrImg.alt = "Payment QR";
-      qrImg.src = "tip-qr.png";
-      qrImg.onload = () => {
-        tipQr.replaceChildren(qrImg);
-      };
 
       const COLORS = ["red", "blue", "yellow", "green", "purple", "orange"];
       const TARGET = 72; // aim for roughly brick-sized segments
